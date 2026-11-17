@@ -78,7 +78,7 @@ create policy "transactions: owner all" on public.transactions
 create table public.cash_entries (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
-  kind text not null check (kind in ('starting', 'deposit', 'withdrawal')),
+  kind text not null check (kind in ('starting', 'balance', 'deposit', 'withdrawal')), -- starting/balance = "cash in my account on this date"
   amount numeric(20, 6) not null check (amount >= 0),
   currency text not null check (currency ~ '^[A-Z]{3}$'),
   entry_date date not null default current_date,

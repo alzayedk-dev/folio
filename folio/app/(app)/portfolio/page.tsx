@@ -9,6 +9,8 @@ import { SummaryCards } from "@/components/SummaryCards";
 import { HoldingsTable } from "@/components/HoldingsTable";
 import { RefreshPrices } from "@/components/RefreshPrices";
 import { PortfolioSkeleton } from "@/components/Skeleton";
+import { SectorTable } from "@/components/SectorTable";
+import { CashCard } from "@/components/CashCard";
 import { Alert } from "@/components/ui";
 
 export const metadata = { title: "Portfolio · Folio" };
@@ -23,7 +25,7 @@ export default function PortfolioPage() {
 
 async function PortfolioContent() {
   const supabase = await createClient();
-  const { ledger, valuation: v, notice, asOf } = await loadValuation(supabase);
+  const { ledger, valuation: v, notice, asOf, cash } = await loadValuation(supabase);
   const positions = toPositionSummary(ledger);
   const hasAnything = v.holdings.length > 0 || v.cashValue > 0;
 
@@ -36,7 +38,12 @@ async function PortfolioContent() {
       />
 
       {!hasAnything ? (
-        <EmptyState title={messages.emptyPortfolio}>Click “Add transaction” to record your first buy.</EmptyState>
+        <div className="space-y-6">
+          <EmptyState title={messages.emptyPortfolio}>Click “Add transaction” to record your first buy, or add the cash in your account.</EmptyState>
+          <div className="max-w-md">
+            <CashCard balances={v.cashByCurrency} total={v.cashValue} base={v.base} entries={cash} />
+          </div>
+        </div>
       ) : (
         <div className="space-y-6">
           {notice && <Alert tone="info">{notice}</Alert>}
@@ -59,6 +66,12 @@ async function PortfolioContent() {
           ) : (
             <EmptyState title="All cash, no stocks yet.">Add a buy to see your holdings here.</EmptyState>
           )}
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <SectorTable sectors={v.sectors} base={v.base} />
+            </div>
+            <CashCard balances={v.cashByCurrency} total={v.cashValue} base={v.base} entries={cash} />
+          </div>
         </div>
       )}
     </>

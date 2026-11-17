@@ -67,6 +67,22 @@ export const transactionSchema = z
 
 export type TransactionInput = z.infer<typeof transactionSchema>;
 
+// ---------- cash ----------
+export const cashMessages = {
+  amount: "Enter your cash balance (0 or more).",
+  currency: "Pick a currency from the list.",
+  date: "Pick a date that isn't in the future.",
+} as const;
+
+export const cashBalanceSchema = z
+  .object({
+    amount: z.coerce.number({ message: cashMessages.amount }).refine((n) => Number.isFinite(n) && n >= 0 && n <= 1e12, cashMessages.amount),
+    currency: z.enum(currencyCodes, { message: cashMessages.currency }),
+    entryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, cashMessages.date),
+    note: z.string().trim().max(200).optional().default(""),
+  })
+  .refine((v) => v.entryDate <= latestTradeDate() && v.entryDate >= "1970-01-01", { message: cashMessages.date, path: ["entryDate"] });
+
 /** Only allow redirects to our own pages (prevents open redirects via ?next=). */
 export function safeNext(next: string | null | undefined, fallback = "/portfolio"): string {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;

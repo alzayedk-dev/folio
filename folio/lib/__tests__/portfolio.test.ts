@@ -125,6 +125,13 @@ describe("replayLedger: cash", () => {
     expect(l.cash).toEqual({ USD: 500 });
   });
 
+  it("a later balance update (Cash card) resets cash; the change counts as money moved", () => {
+    const l = replayLedger([buy("AAPL", 1, 100, "2026-02-01")], [cash("starting", 1000), cash("balance", 600, "USD", "2026-03-01")]);
+    expect(l.cash.USD).toBeCloseTo(600);
+    // 1000 in, then 900 left after the buy, then set to 600 = 300 withdrawn
+    expect(l.netDeposited).toBeCloseTo(700);
+  });
+
   it("sell proceeds land in the stock's currency", () => {
     const l = replayLedger(
       [buy("VOD.L", 100, 1.1, "2026-01-02", { currency: "GBP" }), sell("VOD.L", 100, 1.2, "2026-02-02", { currency: "GBP" })],

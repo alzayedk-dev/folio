@@ -18,7 +18,7 @@ export type Txn = {
 
 export type CashEntry = {
   id: string;
-  kind: "starting" | "deposit" | "withdrawal";
+  kind: "starting" | "balance" | "deposit" | "withdrawal";
   amount: number;
   currency: string;
   entryDate: string; // YYYY-MM-DD
@@ -107,7 +107,7 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
       order: 0,
       tie: c.id,
       run: () => {
-        if (c.kind === "starting") {
+        if (c.kind === "starting" || c.kind === "balance") {
           // Balance check-point: "this is the cash in my account on this date". It already includes
           // everything that happened before, so it replaces all balances; the difference counts as money in/out.
           const before = Object.entries(cash).reduce((a, [ccy, amt]) => a + toBase(amt, ccy), 0);

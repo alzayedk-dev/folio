@@ -4,6 +4,7 @@
 export const messages = {
   loading: "Crunching your numbers…",
   savingTrade: "Booking your trade…",
+  savingCash: "Updating your ledger…",
   signingIn: "Opening the trading floor…",
   creatingAccount: "Opening your account…",
 
