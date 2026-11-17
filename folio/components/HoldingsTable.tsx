@@ -52,24 +52,21 @@ const WARNING_TITLE = `Guideline: above ${STOCK_THRESHOLDS.yellow}% of your port
 export function HoldingsTable({
   holdings,
   base,
-  cashValue,
-  metalsValue = 0,
-  totalValue,
-  unrealizedPL,
   showShariah = false,
 }: {
   holdings: HoldingRow[];
   base: string;
-  cashValue: number;
-  metalsValue?: number;
-  totalValue: number;
-  unrealizedPL: number;
   showShariah?: boolean;
 }) {
   const [mode, setMode] = usePersistentState<Mode>("folio.plMode", "usd", ["usd", "pct"]);
   const [sort, setSort] = useState<Sort>({ key: "value", dir: -1 });
   const shariah = useShariah(useMemo(() => holdings.map((h) => h.ticker), [holdings]), showShariah);
   const extra = showShariah ? 1 : 0;
+  const stocksValue = holdings.reduce((a, h) => a + h.value, 0);
+  const stocksWeight = holdings.reduce((a, h) => a + h.weight, 0);
+  const stocksPL = holdings.reduce((a, h) => a + h.unrealizedPL, 0);
+  const stocksCost = stocksValue - stocksPL;
+  const stocksPLPct = stocksCost > 0 ? (stocksPL / stocksCost) * 100 : null;
 
   const sorted = useMemo(() => {
     const val = (h: HoldingRow): number | string => {
@@ -169,35 +166,15 @@ export function HoldingsTable({
                 <td className={`px-3 py-3 text-right font-medium ${gainClass(h.unrealizedPL)}`}>{plCell(h)}</td>
               </tr>
             ))}
-            {metalsValue > 0.005 && (
-              <tr className="text-muted">
-                <td className="sticky left-0 z-[1] bg-white px-3 py-3 font-medium text-foreground shadow-[1px_0_0_var(--border)]">
-                  <a href="#metals-heading" className="inline-block py-1 hover:text-brand">Precious Metals</a>
-                </td>
-                <td colSpan={3} />
-                <td className="px-3 py-3 text-right font-medium text-foreground">{money(metalsValue, base)}</td>
-                <td className="px-3 py-3 text-right">{pct(totalValue ? (metalsValue / totalValue) * 100 : 0)}</td>
-                <td colSpan={2 + extra} />
-              </tr>
-            )}
-            {cashValue > 0.005 && (
-              <tr className="text-muted">
-                <td className="sticky left-0 z-[1] bg-white px-3 py-3 font-medium text-foreground shadow-[1px_0_0_var(--border)]">Cash</td>
-                <td colSpan={3} />
-                <td className="px-3 py-3 text-right font-medium text-foreground">{money(cashValue, base)}</td>
-                <td className="px-3 py-3 text-right">{pct(totalValue ? (cashValue / totalValue) * 100 : 0)}</td>
-                <td colSpan={2 + extra} />
-              </tr>
-            )}
           </tbody>
           <tfoot className="border-t-2 border-brand/30 bg-brand-soft/40 font-semibold tabular">
             <tr>
-              <td className="sticky left-0 z-[1] bg-brand-soft px-3 py-3 shadow-[1px_0_0_var(--border)]">Total</td>
+              <td className="sticky left-0 z-[1] bg-brand-soft px-3 py-3 shadow-[1px_0_0_var(--border)]">Total Stocks</td>
               <td colSpan={3} />
-              <td className="px-3 py-3 text-right">{money(totalValue, base)}</td>
-              <td className="px-3 py-3 text-right">{totalValue > 0 ? "100%" : "—"}</td>
+              <td className="px-3 py-3 text-right">{money(stocksValue, base)}</td>
+              <td className="px-3 py-3 text-right">{pct(stocksWeight)}</td>
               <td colSpan={1 + extra} />
-              <td className={`px-3 py-3 text-right ${gainClass(unrealizedPL)}`}>{mode === "usd" ? money(unrealizedPL, base, { sign: true }) : ""}</td>
+              <td className={`px-3 py-3 text-right ${gainClass(stocksPL)}`}>{mode === "usd" ? money(stocksPL, base, { sign: true }) : pct(stocksPLPct, { sign: true })}</td>
             </tr>
           </tfoot>
         </table>

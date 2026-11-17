@@ -89,7 +89,7 @@ export function TransactionModal({
   const [form, setForm] = useState({ shares: "", price: "", amount: "", fees: "", tradeDate: "", notes: "" });
   const [error, setError] = useState<{ message: string; field?: string } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [unit, setUnitState] = useState<WeightUnit>("g"); // grams by default; Troy Oz and Tola one click away
+  const [unit, setUnitState] = useState<WeightUnit>("g"); // grams by default; Troy Oz one click away
   const metal = !!picked && isMetal(picked.ticker);
   const metalKey = picked && isMetal(picked.ticker) ? METALS[picked.ticker].key : "gold";
   // How gold/silver is entered: a bar (weight + purity), a coin from the list, or a custom coin
@@ -225,7 +225,7 @@ export function TransactionModal({
   const fineOz = !metal ? NaN : metalForm === "bar" ? barFineOz(qty, unit, purity) : qty * fineOzPerCoin;
   const unitLabel = WEIGHT_UNITS.find((u) => u.value === unit)?.label ?? "Troy Oz";
   const unitShort = WEIGHT_UNITS.find((u) => u.value === unit)?.short ?? "oz";
-  const unitWord = unit === "oz" ? "Ounce" : unit === "g" ? "Gram" : "Tola";
+  const unitWord = unit === "oz" ? "Ounce" : "Gram";
   const ownedLabel = metal ? `${fmtShares(Math.round(Math.max(fromOunces(owned, isCoinForm ? "g" : unit), 0) * 1e4) / 1e4)} ${isCoinForm ? "g" : unitShort} pure` : `${fmtShares(Math.round(Math.max(owned, 0) * 1e4) / 1e4)} shares`;
   const spot = picked?.currentPrice ?? null;
   // Current price in the same terms the user types: per share, per unit of bar weight, or melt value per coin

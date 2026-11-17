@@ -15,6 +15,7 @@ import { SectorTable } from "@/components/SectorTable";
 import { CashCard } from "@/components/CashCard";
 import { MetalsTable } from "@/components/MetalsTable";
 import { AssetMix } from "@/components/AssetMix";
+import { PortfolioTotal } from "@/components/PortfolioTotal";
 import { METALS_SECTOR, coinHoldings } from "@/lib/metals";
 import { Alert } from "@/components/ui";
 
@@ -84,15 +85,7 @@ async function PortfolioContent() {
           </div>
           <AssetMix stocks={v.stocksValue} metals={v.metalsValue} cash={v.cashValue} base={v.base} />
           {stocks.length > 0 ? (
-            <HoldingsTable
-              holdings={stocks}
-              metalsValue={v.metalsValue}
-              base={v.base}
-              cashValue={v.cashValue}
-              totalValue={v.totalValue}
-              unrealizedPL={v.unrealizedPL}
-              showShariah={showShariah}
-            />
+            <HoldingsTable holdings={stocks} base={v.base} showShariah={showShariah} />
           ) : (
             <EmptyState title="No stocks yet.">Add a buy to see your holdings here.</EmptyState>
           )}
@@ -103,6 +96,7 @@ async function PortfolioContent() {
             </div>
             <CashCard balances={v.cashByCurrency} total={v.cashValue} base={v.base} entries={cash} />
           </div>
+          <PortfolioTotal stocks={v.stocksValue} metals={v.metalsValue} cash={v.cashValue} base={v.base} />
         </div>
       )}
     </>

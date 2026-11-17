@@ -3,7 +3,6 @@
 // Coins and bars below 24k are converted to their pure (fine) metal content and valued at melt value.
 
 export const GRAMS_PER_TROY_OUNCE = 31.1034768;
-export const GRAMS_PER_TOLA = 11.6638038;
 export const METALS_SECTOR = "Precious Metals";
 
 export const METALS = {
@@ -13,15 +12,14 @@ export const METALS = {
 
 export type MetalTicker = keyof typeof METALS;
 export type MetalKey = "gold" | "silver";
-export type WeightUnit = "oz" | "g" | "tola";
+export type WeightUnit = "oz" | "g";
 
 export const WEIGHT_UNITS: { value: WeightUnit; label: string; short: string }[] = [
   { value: "g", label: "Grams", short: "g" },
   { value: "oz", label: "Troy Oz", short: "oz" },
-  { value: "tola", label: "Tola", short: "tola" },
 ];
 
-const GRAMS_PER: Record<WeightUnit, number> = { oz: GRAMS_PER_TROY_OUNCE, g: 1, tola: GRAMS_PER_TOLA };
+const GRAMS_PER: Record<WeightUnit, number> = { oz: GRAMS_PER_TROY_OUNCE, g: 1 };
 
 export function isMetal(ticker: string): ticker is MetalTicker {
   return ticker in METALS;
@@ -31,7 +29,7 @@ export function metalTicker(key: MetalKey): MetalTicker {
   return key === "gold" ? "GC=F" : "SI=F";
 }
 
-/** Weight in oz, grams or tola → troy ounces (what we store). */
+/** Weight in oz or grams → troy ounces (what we store). */
 export function toOunces(weight: number, unit: WeightUnit): number {
   return unit === "oz" ? weight : (weight * GRAMS_PER[unit]) / GRAMS_PER_TROY_OUNCE;
 }
@@ -41,7 +39,7 @@ export function fromOunces(ounces: number, unit: WeightUnit): number {
   return unit === "oz" ? ounces : (ounces * GRAMS_PER_TROY_OUNCE) / GRAMS_PER[unit];
 }
 
-/** Price per oz, gram or tola → price per troy ounce (what we store). */
+/** Price per oz or gram → price per troy ounce (what we store). */
 export function toPricePerOunce(price: number, unit: WeightUnit): number {
   return unit === "oz" ? price : (price * GRAMS_PER_TROY_OUNCE) / GRAMS_PER[unit];
 }

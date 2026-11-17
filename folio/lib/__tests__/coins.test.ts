@@ -25,9 +25,9 @@ describe("pure weight", () => {
   it("bars: weight × purity (100 g of 21k = 87.5 g pure)", () => {
     expect(gramsPure(barFineOz(100, "g", 0.875))).toBeCloseTo(87.5, 6);
   });
-  it("tola: 1 tola = 11.6638 g", () => {
-    expect(fromOunces(toOunces(1, "tola"), "g")).toBeCloseTo(11.6638, 4);
-    expect(fromPricePerOunce(toPricePerOunce(500, "tola"), "tola")).toBeCloseTo(500, 6);
+  it("grams and ounces convert both ways", () => {
+    expect(fromOunces(toOunces(31.1034768, "g"), "oz")).toBeCloseTo(1, 9);
+    expect(fromPricePerOunce(toPricePerOunce(120, "g"), "g")).toBeCloseTo(120, 6);
   });
   it("custom coins: count × grams × purity", () => {
     expect(gramsPure(customFineOz(3, 8, 0.9))).toBeCloseTo(21.6, 6);
