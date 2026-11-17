@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteTransaction } from "@/app/(app)/actions/transactions";
@@ -117,7 +118,9 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
                   {shown.map((r) => (
                     <tr key={r.id}>
                       <td className="sticky left-0 z-[1] bg-white px-3 py-3 shadow-[1px_0_0_var(--border)]">
-                        <span className="block font-semibold">{isMetal(r.ticker) ? r.name : r.ticker}</span>
+                        <Link href={`/stock/${encodeURIComponent(r.ticker)}`} className="block font-semibold hover:text-brand hover:underline">
+                          {isMetal(r.ticker) ? r.name : r.ticker}
+                        </Link>
                         <span className="block max-w-[7.5rem] truncate text-xs text-muted sm:max-w-[12rem]" title={r.name}>{r.name}</span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 text-muted">{r.tradeDate}</td>

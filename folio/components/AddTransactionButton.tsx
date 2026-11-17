@@ -4,7 +4,15 @@ import { useState } from "react";
 import { Button } from "./ui";
 import { TransactionModal, type PositionSummary } from "./TransactionModal";
 
-export function AddTransactionButton({ positions, label = "Add Transaction" }: { positions: PositionSummary; label?: string }) {
+export function AddTransactionButton({
+  positions,
+  label = "Add Transaction",
+  presetTicker,
+}: {
+  positions: PositionSummary;
+  label?: string;
+  presetTicker?: string;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -14,7 +22,7 @@ export function AddTransactionButton({ positions, label = "Add Transaction" }: {
         </svg>
         {label}
       </Button>
-      <TransactionModal open={open} onClose={() => setOpen(false)} positions={positions} />
+      <TransactionModal open={open} onClose={() => setOpen(false)} positions={positions} presetTicker={presetTicker} />
     </>
   );
 }

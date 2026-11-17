@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { HoldingRow } from "@/lib/portfolio";
 import { STOCK_THRESHOLDS } from "@/lib/portfolio";
@@ -129,7 +130,9 @@ export function HoldingsTable({
             {sorted.map((h) => (
               <tr key={h.ticker}>
                 <td className="sticky left-0 z-[1] bg-white px-3 py-3 shadow-[1px_0_0_var(--border)]">
-                  <span className="block font-semibold text-foreground">{h.ticker}</span>
+                  <Link href={`/stock/${encodeURIComponent(h.ticker)}`} className="block font-semibold text-foreground hover:text-brand hover:underline">
+                    {h.ticker}
+                  </Link>
                   <span className="block max-w-[7.5rem] truncate text-xs text-muted sm:max-w-[14rem]" title={h.name}>{h.name}</span>
                 </td>
                 <td className="px-3 py-3 text-right">{fmtShares(h.shares)}</td>

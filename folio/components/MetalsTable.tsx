@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { HoldingRow } from "@/lib/portfolio";
 import { fromOunces, fromPricePerOunce, type WeightUnit } from "@/lib/metals";
 import { gainClass, money, pct, price as fmtPrice, shares as fmtShares } from "@/lib/format";
@@ -59,7 +60,9 @@ export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: stri
             {metals.map((m) => (
               <tr key={m.ticker}>
                 <td className="sticky left-0 z-[1] bg-white px-3 py-3 shadow-[1px_0_0_var(--border)]">
-                  <span className="block font-semibold">{m.name}</span>
+                  <Link href={`/stock/${encodeURIComponent(m.ticker)}`} className="block font-semibold hover:text-brand hover:underline">
+                    {m.name}
+                  </Link>
                   <span className="block text-xs text-muted">COMEX price{m.priceMissing || m.stale ? " (delayed)" : ""}</span>
                 </td>
                 <td className="px-3 py-3 text-right">{fmtShares(Math.round(fromOunces(m.shares, unit) * 1e4) / 1e4)} {per}</td>

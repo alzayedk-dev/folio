@@ -43,12 +43,15 @@ export function TransactionModal({
   positions,
   editing,
   initialType = "buy",
+  presetTicker,
 }: {
   open: boolean;
   onClose: () => void;
   positions: PositionSummary;
   editing?: EditableTxn | null;
   initialType?: "buy" | "sell" | "dividend";
+  /** Open straight on this stock/metal (e.g. from its stock page) instead of the search step. */
+  presetTicker?: string;
 }) {
   const router = useRouter();
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -112,8 +115,12 @@ export function TransactionModal({
       setPicked(null);
       setType(initialType);
       setForm({ shares: "", price: "", amount: "", fees: "", tradeDate: todayLocal(), notes: "" });
+      if (presetTicker) {
+        if (isMetal(presetTicker)) void pickMetal(METALS[presetTicker].key);
+        else void pick({ ticker: presetTicker, name: presetTicker, exchange: null, type: "EQUITY" });
+      }
     }
-  }, [open, editing, initialType]);
+  }, [open, editing, initialType, presetTicker]);
 
   async function pick(r: SearchResult) {
     setError(null);
