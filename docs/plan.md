@@ -25,6 +25,9 @@ We build Folio in **thin working slices**: each task ends with something you can
 
 Total estimate: **about 32 hours of building**, plus a buffer for testing and sleep. If time runs short, cut in this order: **phone push → email alerts → stock-page news → best/worst day stats**.
 
+## Engineering standards (checked at every checkpoint)
+Reusable components (no copy-paste UI), responsive from 375 px to desktop, proper loading/empty/error/saving states, and maintainable, scalable structure (pure tested calculations, one adapter per data source, database-enforced privacy, caching). See PRD 3.13.
+
 ## Key decisions
 - **Supabase Edge Functions hold every secret key.** The browser and the Next.js site only call our own Edge Functions, never Finnhub, Yahoo, OpenRouter or Resend directly.
 - **Supabase row-level security (RLS) on every table.** Private data is readable only by its owner. Public portfolios are exposed only through a database function that returns **% figures**, never dollars or share counts.
@@ -231,12 +234,18 @@ Only the public Supabase URL/key and the Supabase secret key go in `folio/.env.l
 
 ### Phase 6: Polish + submit (about 2.5 h)
 
+**Task 21b: About + Contact pages, footer** · S · 1 h
+- Public About page (what Folio is for) and Contact page (owner's name + alzayed.k@yahoo.com as a mailto link). Links in the header (desktop next to the bell, phone inside the account menu) and in a footer on every page incl. the landing page. Both open without login.
+- **Accept:** links visible on desktop and phone, logged in and out; email link opens the mail app.
+- **Files:** `app/about/page.tsx`, `app/contact/page.tsx`, `components/SiteFooter.tsx`, `components/AppShell.tsx`, `middleware.ts`
+
 **Task 22: Friendly states + phone pass** · S · 1.5 h
 - Go through every loading, empty, error and "delisted" state; check every tab at 375 px; accessibility basics (labels, contrast, keyboard).
 - **Accept:** no raw error text anywhere; nothing overflows on a phone.
 - **Files:** `app/not-found.tsx`, `app/error.tsx`, plus small edits across components
 
-**Task 23: Final verification + demo account** · S · 1 h
+**Task 23: Final verification + demo account**
+- At the very end, open the finished site in the side browser pane so you can review each page and comment on functionality and design; then apply your feedback. · S · 1 h
 - Run the 13 "done" checks in PRD section 9 on the live URL; create a demo account with a realistic portfolio (US + 1–2 international stocks, about 1 year of history) and one published portfolio to follow.
 - **Accept:** all 13 checks pass; the demo account is ready for the presentation.
 

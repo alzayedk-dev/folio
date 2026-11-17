@@ -180,6 +180,12 @@ Opens when a ticker is clicked.
 - **What creates an alert:** earnings in 10 days or 1 day; a followed portfolio's owner trades.
 - The user controls each channel in Settings.
 
+### 3.12 About and Contact pages
+- **About page:** explains what Folio is for, who it helps, what it does and doesn't do (monitors, never trades or advises), and where the data comes from.
+- **Contact page:** the owner's name and email (alzayed.k@yahoo.com, shown as a clickable email link).
+- **Where the links appear:** in the **header** (desktop: next to the bell; phone: inside the account menu) and in a **footer** on every page, including the public landing page.
+- Both pages can be opened without logging in.
+
 ### 3.11 Friendly messages
 Every loading, error, wrong-input and busy-server message is friendly and uses finance language. Examples:
 
@@ -195,6 +201,12 @@ Every loading, error, wrong-input and busy-server message is friendly and uses f
 | Page not found | "This page has been delisted." |
 
 ---
+
+## 3.13 Engineering standards (apply to every task)
+1. **Reusable components:** shared building blocks (buttons, fields, cards, tables, badges, pop-ups, page headers, empty states, money/percent formatting) live in `components/` and `lib/` and are reused, never copied.
+2. **Responsive design:** every page works from phone (375 px) to desktop with no sideways scrolling; tables become cards on phones; bottom tab bar on phones.
+3. **Proper state handling:** every data view has loading, empty, error and success states; server data is loaded on the server and refreshed after changes; forms show saving states and can't be double-submitted; local UI state stays in the component that owns it.
+4. **Scalability and maintenance:** calculations are pure, tested functions; data access goes through one adapter per source; database rules enforce privacy; caching keeps API use low; strict TypeScript, lint and tests run before every milestone; no duplicated logic.
 
 ## 4. Rules for the numbers
 
@@ -293,7 +305,8 @@ docs/             this PRD and the build plan
 10. Publishing, the Public tab, following, and follow alerts work, with no dollar amounts leaked.
 11. In-app and email alerts work. Push works on at least desktop Chrome and Android (or is marked "coming soon" if cut).
 12. Every error and loading state uses a friendly finance message.
-13. All unit tests pass, the production build succeeds, and the app works on the live Vercel URL at desktop and phone width.
+13. About and Contact pages are reachable from the header and footer, also when logged out.
+14. All unit tests pass, the production build succeeds, and the app works on the live Vercel URL at desktop and phone width.
 
 ---
 
