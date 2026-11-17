@@ -9,7 +9,9 @@ export function RefreshPrices({ asOf, intervalMs = 60_000 }: { asOf: string | nu
   const [pending, startTransition] = useTransition();
   const [loadedAt, setLoadedAt] = useState(() => Date.now());
 
-  useEffect(() => setLoadedAt(Date.now()), [asOf]);
+  useEffect(() => {
+    setLoadedAt(Date.now());
+  }, [asOf]);
 
   useEffect(() => {
     const id = setInterval(() => {

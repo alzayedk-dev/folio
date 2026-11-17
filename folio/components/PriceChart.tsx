@@ -28,14 +28,13 @@ export function PriceChart({ points, currency, today, unitLabel, scale = 1 }: { 
     <section aria-labelledby="price-chart-heading" className="rounded-2xl border border-line bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 id="price-chart-heading" className="font-semibold">Price History</h2>
+          <h2 id="price-chart-heading" className="font-semibold">Price</h2>
           {change != null && (
             <p className={`text-sm tabular ${gainClass(change)}`}>
               {pct(change, { sign: true, digits: 2 })} <span className="text-muted">over {range}</span>
             </p>
           )}
         </div>
-        <SegmentedToggle label="Price chart range" value={range} options={OPTIONS} onChange={setRange} />
       </div>
       {data.length < 2 ? (
         <p className="py-16 text-center text-sm text-muted">Price history isn&apos;t available for this range yet.</p>
@@ -64,6 +63,9 @@ export function PriceChart({ points, currency, today, unitLabel, scale = 1 }: { 
           </ResponsiveContainer>
         </div>
       )}
+      <div className="mt-4 flex justify-center">
+        <SegmentedToggle label="Price chart range" value={range} options={OPTIONS} onChange={setRange} size="md" />
+      </div>
     </section>
   );
 }

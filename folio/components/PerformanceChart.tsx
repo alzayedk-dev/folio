@@ -69,7 +69,6 @@ export function PerformanceChart({
     <div className="space-y-4">
       {/* Controls: one row above the chart */}
       <div className="flex flex-wrap items-center gap-3">
-        <SegmentedToggle label="Time range" value={range} options={RANGE_OPTIONS} onChange={setRange} size="md" />
         <div className="flex items-center gap-2">
           <SegmentedToggle label="Show value in dollars or percent" value={showPct ? "pct" : "usd"} options={MODES} onChange={(v) => !comparing && setMode(v)} />
           <Select value={view} onChange={(e) => setView(e.target.value as typeof view)} aria-label="Compare with" className="w-auto py-1.5 text-xs">
@@ -84,7 +83,7 @@ export function PerformanceChart({
       <section aria-labelledby="perf-chart-heading" className="rounded-2xl border border-line bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="perf-chart-heading" className="font-semibold">
-            {comparing ? `My Portfolio vs ${BENCH_LABEL[view]}` : showPct ? "Return Since Start Of Range" : "Portfolio Value"}
+            Performance
           </h2>
           <p className="text-xs text-muted">
             {shortDate(start, true)} – {shortDate(today, true)}
@@ -142,6 +141,9 @@ export function PerformanceChart({
             </ResponsiveContainer>
           </div>
         )}
+        <div className="mt-4 flex justify-center">
+          <SegmentedToggle label="Time range" value={range} options={RANGE_OPTIONS} onChange={setRange} size="md" />
+        </div>
         {unavailable && <p className="mt-2 text-xs text-warn">{BENCH_LABEL[view as BenchKey]} history is unavailable right now. The market feed is catching its breath.</p>}
       </section>
 
