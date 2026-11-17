@@ -2,6 +2,7 @@ import type { SectorRow } from "@/lib/portfolio";
 import { SECTOR_THRESHOLDS } from "@/lib/portfolio";
 import { money, pct } from "@/lib/format";
 import { WarningBadge } from "./WarningBadge";
+import { METALS, isMetal } from "@/lib/metals";
 
 const NOTE = `Guideline: one sector above ${SECTOR_THRESHOLDS.yellow}% is high, above ${SECTOR_THRESHOLDS.red}% is very high. ETFs ("Other") and cash get no warning. Not advice.`;
 
@@ -51,7 +52,7 @@ export function SectorTable({ sectors, base }: { sectors: SectorRow[]; base: str
               <tr key={s.sector}>
                 <td className="px-4 py-3 sm:px-5">
                   <span className={`block font-medium ${s.sector === "Cash" ? "text-muted" : ""}`}>{s.sector}</span>
-                  {s.tickers.length > 0 && <span className="block text-xs text-muted">{s.tickers.join(", ")}</span>}
+                  {s.tickers.length > 0 && <span className="block text-xs text-muted">{s.tickers.map((t) => (isMetal(t) ? METALS[t].name : t)).join(", ")}</span>}
                   {/* phone: bar under the name */}
                   <div className="mt-2 sm:hidden">
                     <WeightBar weight={s.weight} muted={neutral} />

@@ -227,6 +227,21 @@ describe("valuePortfolio", () => {
     expect(v.realizedPL).toBeCloseTo(50);
   });
 
+  it("precious metals count in value and P/L, split out as their own asset, with no concentration warning", () => {
+    const syms: Record<string, SymbolLike> = { ...symbols, "GC=F": { ticker: "GC=F", name: "Gold", sector: "Precious Metals", currency: "USD" } };
+    // 2 oz gold bought at $2,000/oz, now $2,500/oz; plus $1,000 of AAPL; no cash
+    const l = replayLedger([buy("GC=F", 2, 2000, "2026-01-02"), buy("AAPL", 10, 100, "2026-01-02")], []);
+    const v = valuePortfolio(l, { "GC=F": q("GC=F", 2500), AAPL: q("AAPL", 100) }, syms, fx, "USD");
+    expect(v.metalsValue).toBeCloseTo(5000);
+    expect(v.stocksValue).toBeCloseTo(1000);
+    expect(v.totalValue).toBeCloseTo(6000);
+    const gold = v.holdings.find((h) => h.ticker === "GC=F")!;
+    expect(gold.unrealizedPL).toBeCloseTo(1000);
+    expect(gold.weight).toBeCloseTo(83.33, 1);
+    expect(gold.warning).toBe("none");
+    expect(v.sectors.find((s) => s.sector === "Precious Metals")?.warning).toBe("none");
+  });
+
   it("an empty portfolio is all zeros, not NaN", () => {
     const v = valuePortfolio(replayLedger([], []), {}, symbols, fx, "USD");
     expect(v.totalValue).toBe(0);

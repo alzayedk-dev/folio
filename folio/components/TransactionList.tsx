@@ -6,6 +6,7 @@ import { deleteTransaction } from "@/app/(app)/actions/transactions";
 import { gainClass, money, price as fmtPrice, shares as fmtShares } from "@/lib/format";
 import { TransactionModal, type EditableTxn, type PositionSummary } from "./TransactionModal";
 import { Alert, Select } from "./ui";
+import { isMetal } from "@/lib/metals";
 
 export type TxnRow = EditableTxn & { proceeds: number | null; realizedPL: number | null; total: number };
 
@@ -59,8 +60,8 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
     router.refresh();
   }
 
-  const qtyCell = (r: TxnRow) => (r.type === "dividend" ? "—" : fmtShares(r.shares ?? 0));
-  const priceCell = (r: TxnRow) => (r.type === "dividend" ? "—" : fmtPrice(r.price, r.currency));
+  const qtyCell = (r: TxnRow) => (r.type === "dividend" ? "—" : `${fmtShares(Math.round((r.shares ?? 0) * 1e4) / 1e4)}${isMetal(r.ticker) ? " oz" : ""}`);
+  const priceCell = (r: TxnRow) => (r.type === "dividend" ? "—" : `${fmtPrice(r.price, r.currency)}${isMetal(r.ticker) ? " / oz" : ""}`);
 
   return (
     <section className="space-y-4">
@@ -116,7 +117,7 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
                   {shown.map((r) => (
                     <tr key={r.id}>
                       <td className="sticky left-0 z-[1] bg-white px-3 py-3 shadow-[1px_0_0_var(--border)]">
-                        <span className="block font-semibold">{r.ticker}</span>
+                        <span className="block font-semibold">{isMetal(r.ticker) ? r.name : r.ticker}</span>
                         <span className="block max-w-[7.5rem] truncate text-xs text-muted sm:max-w-[12rem]" title={r.name}>{r.name}</span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 text-muted">{r.tradeDate}</td>

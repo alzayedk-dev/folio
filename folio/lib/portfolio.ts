@@ -1,6 +1,7 @@
 // Folio's calculation engine. Pure functions only (no network, no database) so every rule is unit-tested.
 // Rules follow docs/prd.md section 4.
 import { convert, type FxTable } from "./market";
+import { METALS_SECTOR } from "./metals";
 
 // ---------- input types ----------
 export type Txn = {
@@ -188,9 +189,9 @@ export function stockWarning(weightPct: number): Warning {
   return "ok";
 }
 
-/** "Other" (mostly ETFs, already diversified) and "Cash" get no concentration warning. */
+/** "Other" (mostly ETFs, already diversified), precious metals and cash get no concentration warning. */
 export function sectorWarning(sector: string, weightPct: number): Warning {
-  if (sector === "Other" || sector === "Cash") return "none";
+  if (sector === "Other" || sector === "Cash" || sector === METALS_SECTOR) return "none";
   if (weightPct > SECTOR_THRESHOLDS.red) return "red";
   if (weightPct > SECTOR_THRESHOLDS.yellow) return "yellow";
   return "ok";
@@ -227,6 +228,8 @@ export type Valuation = {
   cashByCurrency: { currency: string; amount: number; value: number }[];
   cashValue: number;
   investedValue: number;
+  stocksValue: number;
+  metalsValue: number;
   totalValue: number;
   dayChange: number;
   dayChangePct: number;
@@ -304,7 +307,7 @@ export function valuePortfolio(
   const holdings: HoldingRow[] = rows
     .map((r) => {
       const weight = pct(r.value);
-      return { ...r, weight, warning: stockWarning(weight) };
+      return { ...r, weight, warning: r.sector === METALS_SECTOR ? ("none" as Warning) : stockWarning(weight) };
     })
     .sort((a, b) => b.value - a.value);
 
@@ -320,6 +323,7 @@ export function valuePortfolio(
     .sort((a, b) => b.value - a.value);
   if (cashValue > 0.005) sectors.push({ sector: "Cash", value: cashValue, weight: pct(cashValue), warning: "none", tickers: [] });
 
+  const metalsValue = holdings.filter((h) => h.sector === METALS_SECTOR).reduce((a, h) => a + h.value, 0);
   const dayChange = holdings.reduce((a, h) => a + h.dayChange, 0);
   const prevValue = totalValue - dayChange;
   const unrealizedPL = holdings.reduce((a, h) => a + h.unrealizedPL, 0);
@@ -332,6 +336,8 @@ export function valuePortfolio(
     cashByCurrency,
     cashValue,
     investedValue,
+    stocksValue: investedValue - metalsValue,
+    metalsValue,
     totalValue,
     dayChange,
     dayChangePct: prevValue > EPS ? (dayChange / prevValue) * 100 : 0,

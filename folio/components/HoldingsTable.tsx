@@ -48,6 +48,7 @@ export function HoldingsTable({
   holdings,
   base,
   cashValue,
+  metalsValue = 0,
   totalValue,
   dayChange,
   unrealizedPL,
@@ -55,6 +56,7 @@ export function HoldingsTable({
   holdings: HoldingRow[];
   base: string;
   cashValue: number;
+  metalsValue?: number;
   totalValue: number;
   dayChange: number;
   unrealizedPL: number;
@@ -96,7 +98,7 @@ export function HoldingsTable({
     <section aria-labelledby="holdings-heading" className="rounded-2xl border border-line bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
         <h2 id="holdings-heading" className="font-semibold">
-          Holdings <span className="font-normal text-muted">({holdings.length})</span>
+          Stocks <span className="font-normal text-muted">({holdings.length})</span>
         </h2>
         <div className="flex items-center gap-2 text-xs text-muted">
           <span>Show P/L &amp; Day Change In</span>
@@ -146,6 +148,17 @@ export function HoldingsTable({
                 </td>
               </tr>
             ))}
+            {metalsValue > 0.005 && (
+              <tr className="text-muted">
+                <td className="sticky left-0 z-[1] bg-white px-3 py-3 font-medium text-foreground shadow-[1px_0_0_var(--border)]">
+                  <a href="#metals-heading" className="hover:text-brand">Precious Metals</a>
+                </td>
+                <td colSpan={4} />
+                <td className="px-3 py-3 text-right font-medium text-foreground">{money(metalsValue, base)}</td>
+                <td className="px-3 py-3 text-right">{pct(totalValue ? (metalsValue / totalValue) * 100 : 0)}</td>
+                <td colSpan={3} />
+              </tr>
+            )}
             {cashValue > 0.005 && (
               <tr className="text-muted">
                 <td className="sticky left-0 z-[1] bg-white px-3 py-3 font-medium text-foreground shadow-[1px_0_0_var(--border)]">Cash</td>

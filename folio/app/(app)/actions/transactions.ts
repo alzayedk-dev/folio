@@ -6,6 +6,7 @@ import { transactionSchema } from "@/lib/validation";
 import { replayLedger, type Txn } from "@/lib/portfolio";
 import { rowToTxn } from "@/lib/loadPortfolio";
 import { messages } from "@/lib/messages";
+import { isMetal } from "@/lib/metals";
 
 export type ActionResult = { ok: true } | { ok: false; error: string; field?: string };
 
@@ -29,7 +30,8 @@ async function oversellMessage(
   const { data } = await supabase.from("transactions").select("*").eq("ticker", ticker);
   const txns = change((data ?? []).map(rowToTxn));
   const ledger = replayLedger(txns, []);
-  return ledger.problems.some((p) => p.code === "oversell" && p.ticker === ticker) ? messages.oversell : null;
+  if (!ledger.problems.some((p) => p.code === "oversell" && p.ticker === ticker)) return null;
+  return isMetal(ticker) ? "You can't sell more metal than you own." : messages.oversell;
 }
 
 function parse(formData: FormData) {

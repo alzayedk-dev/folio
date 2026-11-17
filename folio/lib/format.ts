@@ -2,20 +2,19 @@
 
 export function money(value: number | null | undefined, currency: string, opts: { compact?: boolean; sign?: boolean } = {}): string {
   if (value == null || !Number.isFinite(value)) return "—";
-  const digits = Math.abs(value) >= 1000 || ["JPY", "KRW"].includes(currency) ? 0 : 2;
-  const precise = ["KWD", "BHD", "OMR"].includes(currency) ? 3 : digits;
+  // Always the same number of decimals so columns line up: 2 normally, 0 for yen/won, 3 for dinars/rials
+  const decimals = ["JPY", "KRW"].includes(currency) ? 0 : ["KWD", "BHD", "OMR"].includes(currency) ? 3 : 2;
   try {
-    const s = new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
       notation: opts.compact ? "compact" : "standard",
-      minimumFractionDigits: opts.compact ? 0 : precise,
-      maximumFractionDigits: opts.compact ? 1 : Math.max(precise, 2),
+      minimumFractionDigits: opts.compact ? 0 : decimals,
+      maximumFractionDigits: opts.compact ? 1 : decimals,
       signDisplay: opts.sign ? "exceptZero" : "auto",
     }).format(value);
-    return s;
   } catch {
-    return `${value.toFixed(2)} ${currency}`;
+    return `${value.toFixed(decimals)} ${currency}`;
   }
 }
 

@@ -11,6 +11,9 @@ import { RefreshPrices } from "@/components/RefreshPrices";
 import { PortfolioSkeleton } from "@/components/Skeleton";
 import { SectorTable } from "@/components/SectorTable";
 import { CashCard } from "@/components/CashCard";
+import { MetalsTable } from "@/components/MetalsTable";
+import { AssetMix } from "@/components/AssetMix";
+import { METALS_SECTOR } from "@/lib/metals";
 import { Alert } from "@/components/ui";
 
 export const metadata = { title: "Portfolio · Folio" };
@@ -28,6 +31,8 @@ async function PortfolioContent() {
   const { ledger, valuation: v, notice, asOf, cash } = await loadValuation(supabase);
   const positions = toPositionSummary(ledger);
   const hasAnything = v.holdings.length > 0 || v.cashValue > 0;
+  const stocks = v.holdings.filter((h) => h.sector !== METALS_SECTOR);
+  const metals = v.holdings.filter((h) => h.sector === METALS_SECTOR);
 
   return (
     <>
@@ -54,9 +59,11 @@ async function PortfolioContent() {
           <div className="flex justify-end">
             <RefreshPrices asOf={asOf} />
           </div>
-          {v.holdings.length > 0 ? (
+          <AssetMix stocks={v.stocksValue} metals={v.metalsValue} cash={v.cashValue} base={v.base} />
+          {stocks.length > 0 ? (
             <HoldingsTable
-              holdings={v.holdings}
+              holdings={stocks}
+              metalsValue={v.metalsValue}
               base={v.base}
               cashValue={v.cashValue}
               totalValue={v.totalValue}
@@ -64,8 +71,9 @@ async function PortfolioContent() {
               unrealizedPL={v.unrealizedPL}
             />
           ) : (
-            <EmptyState title="All cash, no stocks yet.">Add a buy to see your holdings here.</EmptyState>
+            <EmptyState title="No stocks yet.">Add a buy to see your holdings here.</EmptyState>
           )}
+          {metals.length > 0 && <MetalsTable metals={metals} base={v.base} />}
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <SectorTable sectors={v.sectors} base={v.base} />

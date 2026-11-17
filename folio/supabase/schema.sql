@@ -260,3 +260,13 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
+-- ---------------------------------------------------------------
+-- Precious metals (tracked like stocks: quantity in troy ounces, price per ounce in USD).
+-- updated_at far in the future so the 7-day profile refresh never overwrites these fixed rows.
+-- ---------------------------------------------------------------
+insert into public.symbols (ticker, name, exchange, currency, industry, sector, logo, updated_at)
+values
+  ('GC=F', 'Gold', 'COMEX', 'USD', 'Precious metal', 'Precious Metals', null, '2100-01-01'),
+  ('SI=F', 'Silver', 'COMEX', 'USD', 'Precious metal', 'Precious Metals', null, '2100-01-01')
+on conflict (ticker) do update set name = excluded.name, sector = excluded.sector, updated_at = excluded.updated_at;
