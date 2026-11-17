@@ -46,12 +46,31 @@ async function PortfolioContent() {
       />
 
       {!hasAnything ? (
-        <div className="space-y-6">
-          <EmptyState title={messages.emptyPortfolio}>Click “Add transaction” to record your first buy, or add the cash in your account.</EmptyState>
-          <div className="max-w-md">
-            <CashCard balances={v.cashByCurrency} total={v.cashValue} base={v.base} entries={cash} />
-          </div>
-        </div>
+        <section aria-labelledby="get-started" className="space-y-4">
+          <h2 id="get-started" className="text-lg font-semibold">{messages.emptyPortfolio}</h2>
+          <ol className="grid gap-4 md:grid-cols-2">
+            <li className="space-y-2">
+              <p className="text-sm font-medium">
+                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-semibold text-white">1</span>
+                Add the cash in your account
+              </p>
+              <CashCard balances={v.cashByCurrency} total={v.cashValue} base={v.base} entries={cash} />
+            </li>
+            <li className="space-y-2">
+              <p className="text-sm font-medium">
+                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-semibold text-white">2</span>
+                Record your first trade
+              </p>
+              <div className="rounded-2xl border border-line bg-white p-5 shadow-sm">
+                <p className="text-sm text-muted">Add a buy for any stock, ETF, gold or silver you own. Folio fills in the live price and keeps the math.</p>
+                <div className="mt-4">
+                  <AddTransactionButton positions={positions} />
+                </div>
+              </div>
+            </li>
+          </ol>
+          <p className="text-xs text-muted">No cash in the account? Skip step 1. A buy larger than your cash counts the difference as money you added.</p>
+        </section>
       ) : (
         <div className="space-y-6">
           {notice && <Alert tone="info">{notice}</Alert>}

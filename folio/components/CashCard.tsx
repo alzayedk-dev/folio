@@ -64,7 +64,7 @@ export function CashCard({
       <div className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-5">
         <h2 id="cash-heading" className="font-semibold">Cash</h2>
         <Button variant="outline" className="px-3 py-1.5 text-xs" onClick={() => { setError(null); setOpen(true); }}>
-          Update Cash
+          {total > 0 || entries.length > 0 ? "Update Cash" : "Add Cash"}
         </Button>
       </div>
 

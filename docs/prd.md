@@ -57,7 +57,7 @@ Clicking any ticker opens that **stock's page**.
 
 ### 3.1 Accounts and profile
 - Sign up with email and password. Log in, log out, reset a forgotten password.
-- During sign-up, the user enters their **starting cash** and its currency (can be 0). It counts as their first deposit.
+- Sign-up asks only for name, email and password (no cash). After logging in, an empty Portfolio page shows two steps: **1. Add the cash in your account** (the Cash card's Add Cash button) and **2. Record your first trade**. Both are optional, and the first cash entry counts as the first deposit.
 - **Profile (Settings menu in the header):**
   - Display name (**public**, for example "TechBull88")
   - Full name (**private**, only the user sees it)
@@ -394,6 +394,6 @@ docs/             this PRD and the build plan
 ## 11. Decisions made (17 Nov 2026)
 
 1. **Buying without enough cash:** the missing amount counts as new money deposited (cash never goes negative).
-2. **Starting cash:** new users enter their starting cash balance and its currency during sign-up (it can be 0). It counts as their first deposit.
+2. **Starting cash:** (changed 17 Nov) not asked at sign-up. New users add their cash from the Portfolio page after logging in, and it counts as their first deposit.
 3. **Folder name:** the app lives in `folio/`.
 4. **Push on iPhone:** works only after the user taps Share → "Add to Home Screen" (an Apple rule). Android phones and computers work straight from the browser. *Waiting for confirmation.*

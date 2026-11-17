@@ -11,8 +11,6 @@ export const signUpSchema = z
     email: z.string().trim().email(messages.auth.badEmail),
     password: z.string().min(8, messages.auth.weakPassword),
     confirmPassword: z.string(),
-    startingCash: z.coerce.number({ message: messages.auth.badCash }).min(0, messages.auth.badCash).max(1e12, messages.auth.badCash),
-    startingCurrency: z.enum(currencyCodes),
   })
   .refine((v) => v.password === v.confirmPassword, { message: messages.auth.passwordMismatch, path: ["confirmPassword"] });
 

@@ -6,9 +6,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { authErrorMessage, messages } from "@/lib/messages";
 import { signUpSchema } from "@/lib/validation";
-import { CURRENCIES } from "@/lib/currencies";
 import { useHydrated } from "@/components/useHydrated";
-import { Alert, Button, Field, Input, Select } from "@/components/ui";
+import { Alert, Button, Field, Input } from "@/components/ui";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -35,8 +34,6 @@ export default function SignUpPage() {
         data: {
           display_name: v.displayName,
           full_name: v.fullName,
-          starting_cash: String(v.startingCash),
-          starting_currency: v.startingCurrency,
         },
       },
     });
@@ -92,20 +89,6 @@ export default function SignUpPage() {
           </Field>
           <Field label="Confirm Password" htmlFor="confirmPassword">
             <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" required />
-          </Field>
-        </div>
-        <div className="grid grid-cols-[1fr_8rem] gap-3">
-          <Field label="Starting Cash" htmlFor="startingCash" hint="Cash in your brokerage account today. Can be 0.">
-            <Input id="startingCash" name="startingCash" type="number" inputMode="decimal" min={0} step="0.01" defaultValue="0" required />
-          </Field>
-          <Field label="Currency" htmlFor="startingCurrency">
-            <Select id="startingCurrency" name="startingCurrency" defaultValue="USD">
-              {CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code}
-                </option>
-              ))}
-            </Select>
           </Field>
         </div>
         <Button type="submit" className="w-full" disabled={!ready || busy}>

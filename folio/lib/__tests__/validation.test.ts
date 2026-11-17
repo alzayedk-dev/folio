@@ -8,14 +8,12 @@ const valid = {
   email: "test@example.com",
   password: "longenough",
   confirmPassword: "longenough",
-  startingCash: "5000",
-  startingCurrency: "EUR",
 };
 
 describe("signUpSchema", () => {
-  it("accepts a valid sign-up and converts cash to a number", () => {
+  it("accepts a valid sign-up without asking for cash", () => {
     const r = signUpSchema.parse(valid);
-    expect(r.startingCash).toBe(5000);
+    expect(r).not.toHaveProperty("startingCash");
   });
   it("rejects short passwords with a friendly message", () => {
     const r = signUpSchema.safeParse({ ...valid, password: "short", confirmPassword: "short" });
@@ -25,10 +23,6 @@ describe("signUpSchema", () => {
   it("rejects mismatched passwords", () => {
     const r = signUpSchema.safeParse({ ...valid, confirmPassword: "different1" });
     expect(r.error?.issues[0].message).toBe(messages.auth.passwordMismatch);
-  });
-  it("rejects negative cash and unknown currencies", () => {
-    expect(signUpSchema.safeParse({ ...valid, startingCash: "-5" }).success).toBe(false);
-    expect(signUpSchema.safeParse({ ...valid, startingCurrency: "XXX" }).success).toBe(false);
   });
   it("rejects a one-letter display name", () => {
     expect(signUpSchema.safeParse({ ...valid, displayName: "A" }).success).toBe(false);
