@@ -6,6 +6,7 @@ import type { ComponentType, ReactNode, SVGProps } from "react";
 import { Logo } from "./ui";
 import { UserMenu } from "./UserMenu";
 import { NotificationBell } from "./NotificationBell";
+import { SiteFooter } from "./SiteFooter";
 import { IconAI, IconPerformance, IconPortfolio, IconPublic, IconReminders, IconTransactions } from "./icons";
 
 type Tab = { href: string; label: string; short: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
@@ -39,6 +40,8 @@ export function AppShell({
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
+            <Link href="/about" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted hover:text-brand md:inline-block">About</Link>
+            <Link href="/contact" className="mr-1 hidden rounded-lg px-3 py-2 text-sm font-medium text-muted hover:text-brand md:inline-block">Contact</Link>
             <NotificationBell />
             <UserMenu displayName={displayName} avatarUrl={avatarUrl} />
           </div>
@@ -68,7 +71,10 @@ export function AppShell({
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 md:pb-10">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-10">{children}</main>
+      <div className="pb-20 md:pb-0">
+        <SiteFooter signedIn />
+      </div>
 
       {/* Phone bottom bar */}
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white md:hidden pb-[env(safe-area-inset-bottom)]">

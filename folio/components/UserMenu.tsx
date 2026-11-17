@@ -80,6 +80,12 @@ export function UserMenu({ displayName, avatarUrl }: { displayName: string; avat
           >
             <IconSettings className="h-4 w-4" /> Settings
           </Link>
+          <Link href="/about" role="menuitem" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-brand-soft hover:text-brand md:hidden">
+            About
+          </Link>
+          <Link href="/contact" role="menuitem" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-brand-soft hover:text-brand md:hidden">
+            Contact
+          </Link>
           <button
             type="button"
             role="menuitem"
