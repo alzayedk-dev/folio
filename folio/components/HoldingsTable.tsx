@@ -18,10 +18,10 @@ const MODES = [
 
 type Sort = { key: SortKey; dir: 1 | -1 };
 
-function SortHeader({ k, sort, onSort, children, align = "right" }: { k: SortKey; sort: Sort; onSort: (k: SortKey) => void; children: React.ReactNode; align?: "left" | "right" }) {
+function SortHeader({ k, sort, onSort, children, align = "right", sticky = false }: { k: SortKey; sort: Sort; onSort: (k: SortKey) => void; children: React.ReactNode; align?: "left" | "right"; sticky?: boolean }) {
   const active = sort.key === k;
   return (
-    <th scope="col" aria-sort={active ? (sort.dir === 1 ? "ascending" : "descending") : "none"} className={`px-3 py-3 font-medium ${align === "left" ? "text-left" : "text-right"}`}>
+    <th scope="col" aria-sort={active ? (sort.dir === 1 ? "ascending" : "descending") : "none"} className={`px-3 py-3 font-medium ${align === "left" ? "text-left" : "text-right"} ${sticky ? "sticky left-0 z-[1] bg-surface shadow-[1px_0_0_var(--border)]" : ""}`}>
       <button type="button" onClick={() => onSort(k)} className={`inline-flex items-center gap-1 hover:text-brand ${active ? "text-brand" : ""}`}>
         {children}
         <span aria-hidden="true" className="text-[10px]">{active ? (sort.dir === 1 ? "▲" : "▼") : ""}</span>
@@ -98,20 +98,20 @@ export function HoldingsTable({
         </div>
       </div>
 
-      {/* Desktop / tablet table */}
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm">
-          <thead className="border-b border-line bg-surface text-xs text-muted">
+      {/* Table at every width; scrolls sideways inside the box on small screens */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[60rem] text-sm">
+          <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
             <tr>
-              <SortHeader k="ticker" align="left" sort={sort} onSort={toggleSort}>Stock</SortHeader>
-              <SortHeader k="shares" sort={sort} onSort={toggleSort}>Shares</SortHeader>
-              <SortHeader k="avgCost" sort={sort} onSort={toggleSort}>Avg. price</SortHeader>
-              <SortHeader k="price" sort={sort} onSort={toggleSort}>Current</SortHeader>
-              <SortHeader k="dayChange" sort={sort} onSort={toggleSort}>Day</SortHeader>
+              <SortHeader k="ticker" align="left" sticky sort={sort} onSort={toggleSort}>Stock</SortHeader>
+              <SortHeader k="shares" sort={sort} onSort={toggleSort}>Shares owned</SortHeader>
+              <SortHeader k="avgCost" sort={sort} onSort={toggleSort}>Avg. buy price</SortHeader>
+              <SortHeader k="price" sort={sort} onSort={toggleSort}>Current price</SortHeader>
+              <SortHeader k="dayChange" sort={sort} onSort={toggleSort}>Day change</SortHeader>
               <SortHeader k="value" sort={sort} onSort={toggleSort}>Total value</SortHeader>
               <SortHeader k="weight" sort={sort} onSort={toggleSort}>% of portfolio</SortHeader>
               <SortHeader k="sector" align="left" sort={sort} onSort={toggleSort}>Sector</SortHeader>
-              <SortHeader k="pl" sort={sort} onSort={toggleSort}>P/L</SortHeader>
+              <SortHeader k="pl" sort={sort} onSort={toggleSort}>Profit / Loss</SortHeader>
               <th scope="col" className="px-3 py-3 text-left font-medium" title={WARNING_TITLE}>
                 Warning
               </th>
@@ -119,10 +119,10 @@ export function HoldingsTable({
           </thead>
           <tbody className="divide-y divide-line tabular">
             {sorted.map((h) => (
-              <tr key={h.ticker} className="hover:bg-brand-soft/40">
-                <td className="px-3 py-3">
+              <tr key={h.ticker}>
+                <td className="sticky left-0 z-[1] bg-white px-3 py-3 shadow-[1px_0_0_var(--border)]">
                   <span className="block font-semibold text-foreground">{h.ticker}</span>
-                  <span className="block max-w-[14rem] truncate text-xs text-muted" title={h.name}>{h.name}</span>
+                  <span className="block max-w-[7.5rem] truncate text-xs text-muted sm:max-w-[14rem]" title={h.name}>{h.name}</span>
                 </td>
                 <td className="px-3 py-3 text-right">{fmtShares(h.shares)}</td>
                 <td className="px-3 py-3 text-right">{fmtPrice(h.avgCost, h.currency)}</td>
@@ -142,7 +142,7 @@ export function HoldingsTable({
             ))}
             {cashValue > 0.005 && (
               <tr className="text-muted">
-                <td className="px-3 py-3 font-medium text-foreground">Cash</td>
+                <td className="sticky left-0 z-[1] bg-white px-3 py-3 font-medium text-foreground shadow-[1px_0_0_var(--border)]">Cash</td>
                 <td colSpan={4} />
                 <td className="px-3 py-3 text-right font-medium text-foreground">{money(cashValue, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(totalValue ? (cashValue / totalValue) * 100 : 0)}</td>
@@ -152,7 +152,7 @@ export function HoldingsTable({
           </tbody>
           <tfoot className="border-t-2 border-brand/30 bg-brand-soft/40 font-semibold tabular">
             <tr>
-              <td className="px-3 py-3">Total</td>
+              <td className="sticky left-0 z-[1] bg-brand-soft px-3 py-3 shadow-[1px_0_0_var(--border)]">Total</td>
               <td colSpan={3} />
               <td className={`px-3 py-3 text-right ${gainClass(dayChange)}`}>{mode === "usd" ? money(dayChange, base, { sign: true }) : ""}</td>
               <td className="px-3 py-3 text-right">{money(totalValue, base)}</td>
@@ -165,45 +165,6 @@ export function HoldingsTable({
         </table>
       </div>
 
-      {/* Phone cards */}
-      <ul className="divide-y divide-line md:hidden">
-        {sorted.map((h) => (
-          <li key={h.ticker} className="px-4 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-semibold">{h.ticker}</p>
-                <p className="truncate text-xs text-muted">{h.name}</p>
-              </div>
-              <div className="shrink-0 text-right tabular">
-                <p className="font-semibold">{money(h.value, base)}</p>
-                <p className={`text-xs font-medium ${gainClass(h.unrealizedPL)}`}>{plCell(h)}</p>
-              </div>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted tabular">
-              <span>
-                {fmtShares(h.shares)} × {fmtPrice(h.price, h.currency)}
-                <PriceNote h={h} />
-              </span>
-              <span>avg {fmtPrice(h.avgCost, h.currency)}</span>
-              <span className={gainClass(h.dayChange)}>Day {dayCell(h)}</span>
-              <span>{pct(h.weight)} · {h.sector}</span>
-              <WarningBadge level={h.warning} title={WARNING_TITLE} />
-            </div>
-          </li>
-        ))}
-        {cashValue > 0.005 && (
-          <li className="flex justify-between px-4 py-3 text-sm">
-            <span className="font-medium">Cash</span>
-            <span className="tabular">
-              {money(cashValue, base)} <span className="text-xs text-muted">· {pct(totalValue ? (cashValue / totalValue) * 100 : 0)}</span>
-            </span>
-          </li>
-        )}
-        <li className="flex justify-between bg-brand-soft/40 px-4 py-3 text-sm font-semibold">
-          <span>Total</span>
-          <span className="tabular">{money(totalValue, base)}</span>
-        </li>
-      </ul>
     </section>
   );
 }
