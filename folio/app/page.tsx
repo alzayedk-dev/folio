@@ -21,10 +21,12 @@ const FEATURES = [
   { title: "News And Earnings", text: "The latest headlines and earnings reminders for the companies you own." },
   { title: "AI Analyst", text: "Ask questions about stocks, sectors and markets, and get clear answers." },
   { title: "Public Portfolios", text: "Share your holdings and follow other investors." },
+  { title: "Shariah Screener", text: "See at a glance whether a stock passes halal screening, with every rule explained." },
+  { title: "Paper Portfolios", text: "Practise with pretend money and compare it with your real portfolio." },
 ];
 
 const STEPS = [
-  { n: "1", title: "Open Your Folio", text: "Sign up in under a minute and enter the cash in your brokerage account." },
+  { n: "1", title: "Open Your Folio", text: "Sign up in under a minute, then add your cash whenever you're ready." },
   { n: "2", title: "Add Your Trades", text: "Type a ticker like LLY or VOD.L. Name, sector and live price fill in for you." },
   { n: "3", title: "Watch It Work", text: "Totals, P/L, sector warnings, performance and reminders update automatically." },
 ];
@@ -156,7 +158,7 @@ export default async function Home() {
           <div className="mx-auto max-w-6xl px-4 py-16">
             <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">Everything You Need To Stay On Top</h2>
             <p className="mx-auto mt-2 max-w-2xl text-center text-muted">One place for the numbers that matter, without spreadsheets or switching between broker apps.</p>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {FEATURES.map((f) => (
                 <div key={f.title} className="rounded-2xl border border-line bg-white p-6 shadow-sm">
                   <h3 className="font-semibold text-brand">{f.title}</h3>

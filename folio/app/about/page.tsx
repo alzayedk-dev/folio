@@ -19,6 +19,7 @@ const SECTIONS = [
       "Profit and loss for your trades and your whole portfolio",
       "Holding and sector weights, with helpful warnings",
       "Several portfolios, including Paper ones to practise with pretend money",
+      "A Shariah screener that checks stocks against halal investing rules",
       "Performance tracking compared with the market",
       "News and earnings reminders for the companies you own",
       "An AI analyst for your market questions",
@@ -28,6 +29,10 @@ const SECTIONS = [
   {
     title: "Practise With Paper Portfolios",
     body: "Want to test an idea before risking real money? Create a Paper portfolio with pretend cash, trade it like the real thing, and compare it with your real portfolios on the Performance tab. Paper portfolios are always clearly labelled, including when you share them.",
+  },
+  {
+    title: "Shariah Screening",
+    body: "For investors who follow Islamic finance, Folio screens each stock against the widely used AAOIFI rules: what the company does, and how much debt and interest-earning cash it holds. Every stock gets a clear badge (Compliant, Doubtful, Not Compliant or Not Screened), and you can tap it to see each rule. It's a helpful guide, not a religious ruling, and you can hide it in Settings.",
   },
   {
     title: "What Folio Doesn't Do",

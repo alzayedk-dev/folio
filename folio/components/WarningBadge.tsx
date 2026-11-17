@@ -7,8 +7,8 @@ const STYLES: Record<Exclude<Warning, "none">, { dot: string; text: string; labe
 };
 
 /** Concentration warning used by the holdings and sector tables. */
-export function WarningBadge({ level, title }: { level: Warning; title?: string }) {
-  if (level === "none") return <span className="text-xs text-muted">—</span>;
+export function WarningBadge({ level, title, hideNone = false }: { level: Warning; title?: string; hideNone?: boolean }) {
+  if (level === "none") return hideNone ? null : <span className="text-xs text-muted">—</span>;
   const s = STYLES[level];
   return (
     <span title={title} className={`inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium ${s.text}`}>

@@ -119,7 +119,7 @@ export function HoldingsTable({
               <SortHeader k="avgCost" sort={sort} onSort={toggleSort} info="Average price you paid per share, including fees.">Buy Price</SortHeader>
               <SortHeader k="price" sort={sort} onSort={toggleSort}>Current Price</SortHeader>
               <SortHeader k="value" sort={sort} onSort={toggleSort}>Total Value</SortHeader>
-              <SortHeader k="weight" sort={sort} onSort={toggleSort}>% Of Portfolio</SortHeader>
+              <SortHeader k="weight" sort={sort} onSort={toggleSort} info={WARNING_TITLE}>% Of Portfolio</SortHeader>
               <SortHeader k="sector" align="left" sort={sort} onSort={toggleSort}>Sector</SortHeader>
               {showShariah && (
                 <th scope="col" className="px-3 py-2 text-left font-medium">
@@ -130,9 +130,6 @@ export function HoldingsTable({
                 </th>
               )}
               <SortHeader k="pl" sort={sort} onSort={toggleSort}>Profit / Loss</SortHeader>
-              <th scope="col" className="px-3 py-3 text-left font-medium" title={WARNING_TITLE}>
-                Warning
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line tabular">
@@ -151,7 +148,12 @@ export function HoldingsTable({
                   <PriceNote h={h} />
                 </td>
                 <td className="px-3 py-3 text-right font-medium">{money(h.value, base)}</td>
-                <td className="px-3 py-3 text-right">{pct(h.weight)}</td>
+                <td className="px-3 py-3 text-right">
+                  <span className="block">{pct(h.weight)}</span>
+                  <span className="mt-0.5 flex justify-end">
+                    <WarningBadge level={h.warning} title={WARNING_TITLE} hideNone />
+                  </span>
+                </td>
                 <td className="px-3 py-3 text-left text-muted">{h.sector}</td>
                 {showShariah && (
                   <td className="px-3 py-3 text-left">
@@ -165,9 +167,6 @@ export function HoldingsTable({
                   </td>
                 )}
                 <td className={`px-3 py-3 text-right font-medium ${gainClass(h.unrealizedPL)}`}>{plCell(h)}</td>
-                <td className="px-3 py-3">
-                  <WarningBadge level={h.warning} title={WARNING_TITLE} />
-                </td>
               </tr>
             ))}
             {metalsValue > 0.005 && (
@@ -178,7 +177,7 @@ export function HoldingsTable({
                 <td colSpan={3} />
                 <td className="px-3 py-3 text-right font-medium text-foreground">{money(metalsValue, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(totalValue ? (metalsValue / totalValue) * 100 : 0)}</td>
-                <td colSpan={3 + extra} />
+                <td colSpan={2 + extra} />
               </tr>
             )}
             {cashValue > 0.005 && (
@@ -187,7 +186,7 @@ export function HoldingsTable({
                 <td colSpan={3} />
                 <td className="px-3 py-3 text-right font-medium text-foreground">{money(cashValue, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(totalValue ? (cashValue / totalValue) * 100 : 0)}</td>
-                <td colSpan={3 + extra} />
+                <td colSpan={2 + extra} />
               </tr>
             )}
           </tbody>
@@ -199,7 +198,6 @@ export function HoldingsTable({
               <td className="px-3 py-3 text-right">{totalValue > 0 ? "100%" : "—"}</td>
               <td colSpan={1 + extra} />
               <td className={`px-3 py-3 text-right ${gainClass(unrealizedPL)}`}>{mode === "usd" ? money(unrealizedPL, base, { sign: true }) : ""}</td>
-              <td />
             </tr>
           </tfoot>
         </table>

@@ -42,7 +42,6 @@ export function SectorTable({ sectors, base }: { sectors: SectorRow[]; base: str
             </th>
             <th scope="col" className="px-3 py-2.5 text-right font-medium">Weight</th>
             <th scope="col" className="hidden px-3 py-2.5 text-right font-medium md:table-cell">Value</th>
-            <th scope="col" className="px-4 py-2.5 text-left font-medium sm:px-5">Warning</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line tabular">
@@ -61,11 +60,13 @@ export function SectorTable({ sectors, base }: { sectors: SectorRow[]; base: str
                 <td className="hidden px-3 py-3 sm:table-cell">
                   <WeightBar weight={s.weight} muted={neutral} />
                 </td>
-                <td className="px-3 py-3 text-right font-medium">{pct(s.weight)}</td>
-                <td className="hidden px-3 py-3 text-right text-muted md:table-cell">{money(s.value, base)}</td>
-                <td className="px-4 py-3 sm:px-5">
-                  <WarningBadge level={s.warning} title={NOTE} />
+                <td className="px-3 py-3 text-right font-medium">
+                  <span className="block">{pct(s.weight)}</span>
+                  <span className="mt-0.5 flex justify-end">
+                    <WarningBadge level={s.warning} title={NOTE} hideNone />
+                  </span>
                 </td>
+                <td className="hidden px-3 py-3 text-right text-muted md:table-cell">{money(s.value, base)}</td>
               </tr>
             );
           })}
@@ -76,7 +77,6 @@ export function SectorTable({ sectors, base }: { sectors: SectorRow[]; base: str
             <td className="hidden sm:table-cell" />
             <td className="px-3 py-3 text-right">{pct(total)}</td>
             <td className="hidden md:table-cell" />
-            <td />
           </tr>
         </tfoot>
       </table>
