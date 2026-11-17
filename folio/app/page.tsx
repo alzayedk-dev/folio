@@ -26,7 +26,7 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { n: "1", title: "Open Your Folio", text: "Sign up in under a minute, then add your cash whenever you're ready." },
+  { n: "1", title: "Open Your Folio", text: "Sign up in under a minute." },
   { n: "2", title: "Add Your Trades", text: "Type a ticker like LLY or VOD.L. Name, sector and live price fill in for you." },
   { n: "3", title: "Watch It Work", text: "Totals, P/L, sector warnings, performance and reminders update automatically." },
 ];

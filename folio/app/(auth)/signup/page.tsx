@@ -92,7 +92,7 @@ export default function SignUpPage() {
           </Field>
         </div>
         <Button type="submit" className="w-full" disabled={!ready || busy}>
-          {busy ? messages.creatingAccount : "Create Account"}
+          {busy ? messages.creatingAccount : "Let's Folio"}
         </Button>
       </form>
 
