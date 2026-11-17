@@ -1,4 +1,5 @@
-// Folio daily job: earnings reminders (10 days and 1 day before) for everyone's current holdings.
+// Folio daily job: earnings reminders for everyone's current holdings.
+// Timing is per user (profiles.reminder_first / reminder_second); defaults 7 days and 1 day before.
 // Triggered once a day by pg_cron with a private secret (x-cron-secret), checked against app_config.
 // Uses the service role (provided automatically to Edge Functions) because it works across all users.
 
@@ -10,6 +11,7 @@ const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE
 const FINNHUB_KEY = Deno.env.get("FINNHUB_API_KEY") ?? Deno.env.get("Finnhub_API_KEY") ?? "";
 const yf = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 const METALS = new Set(["GC=F", "SI=F"]);
+const MAX_DAYS = 31; // longest reminder anyone can pick is 30 days
 
 const day = (offset = 0) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 864e5);
@@ -19,10 +21,10 @@ const niceDate = (d: string) => new Date(d + "T00:00:00Z").toLocaleDateString("e
 async function earningsDates(tickers: string[]): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   const today = day(0);
-  // One Finnhub call covers every US company reporting in the next 11 days
+  // One Finnhub call covers every US company reporting in the next month
   if (FINNHUB_KEY && tickers.some(isUs)) {
     try {
-      const res = await fetch(`https://finnhub.io/api/v1/calendar/earnings?from=${today}&to=${day(11)}`, { headers: { "X-Finnhub-Token": FINNHUB_KEY }, signal: AbortSignal.timeout(10000) });
+      const res = await fetch(`https://finnhub.io/api/v1/calendar/earnings?from=${today}&to=${day(MAX_DAYS)}`, { headers: { "X-Finnhub-Token": FINNHUB_KEY }, signal: AbortSignal.timeout(10000) });
       const j = await res.json();
       for (const e of j?.earningsCalendar ?? []) {
         const t = String(e.symbol).replace(".", "-");
@@ -40,7 +42,7 @@ async function earningsDates(tickers: string[]): Promise<Map<string, string>> {
         .map((d: Date) => new Date(d).toISOString().slice(0, 10))
         .filter((d: string) => d >= today)
         .sort()[0];
-      if (next && daysBetween(today, next) <= 11) out.set(t, next);
+      if (next && daysBetween(today, next) <= MAX_DAYS) out.set(t, next);
     } catch {
       /* unknown: skip */
     }
@@ -64,18 +66,22 @@ Deno.serve(async (req) => {
   const holdings = [...net.entries()].filter(([, s]) => s > 1e-9).map(([k]) => k.split("|") as [string, string]);
   const tickers = [...new Set(holdings.map(([, t]) => t))];
 
-  const { data: profiles } = await admin.from("profiles").select("id, notify_inapp, notify_email");
-  const wants = new Map((profiles ?? []).map((p) => [p.id, p.notify_inapp || p.notify_email]));
+  const { data: profiles } = await admin.from("profiles").select("id, notify_inapp, notify_email, reminder_first, reminder_second");
+  const prefs = new Map(
+    (profiles ?? []).map((p) => [p.id, { wants: p.notify_inapp || p.notify_email, first: p.reminder_first ?? 7, second: p.reminder_second as number | null }]),
+  );
 
   const dates = await earningsDates(tickers);
   const today = day(0);
   const notes: Record<string, unknown>[] = [];
   for (const [userId, ticker] of holdings) {
     const d = dates.get(ticker);
-    if (!d || !wants.get(userId)) continue;
+    const pref = prefs.get(userId);
+    if (!d || !pref?.wants) continue;
     const left = daysBetween(today, d);
-    if (left < 0 || left > 10) continue;
-    const flag = left <= 1 ? "1" : "10";
+    // Same rule as lib/reminders.ts reminderStage()
+    const flag = left < 0 ? null : pref.second != null && left <= pref.second ? "second" : left <= pref.first ? "first" : null;
+    if (!flag) continue;
     notes.push({
       user_id: userId,
       kind: "earnings",

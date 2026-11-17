@@ -159,7 +159,7 @@ Opens when a ticker is clicked.
 
 ### 3.8 Reminders tab
 - Lists upcoming earnings dates for every stock the user holds.
-- Flags each one **10 days before** and **1 day before**.
+- Flags each one **7 days before** and **1 day before** by default. Each user can change this in Settings (first reminder 2–14 days before; second reminder 2 days, 1 day, on the day, or off).
 - Each flag also creates an alert (see 3.10).
 
 ### 3.9 Public portfolios
@@ -178,7 +178,7 @@ Opens when a ticker is clicked.
 - **In-app:** a bell icon with an unread count, plus a dropdown list.
 - **Email:** sent through Resend (free plan).
 - **Phone push:** browser/phone notifications through the PWA. *Cut first if time runs short.*
-- **What creates an alert:** earnings in 10 days or 1 day; a followed portfolio's owner trades.
+- **What creates an alert:** earnings coming up (7 days and 1 day before by default, or the user's own timing); a followed portfolio's owner trades.
 - The user controls each channel in Settings.
 
 ### 3.14 Precious metals (gold and silver)
@@ -311,7 +311,7 @@ docs/             this PRD and the build plan
 6. The performance chart works for every range, in $ and %, with and without a benchmark.
 7. Stock pages show a price chart for every range.
 8. The AI answers stock questions using the user's holdings and refuses buy/sell or off-topic questions.
-9. Reminders list earnings dates and flag them at 10 days and 1 day.
+9. Reminders list earnings dates and flag them at 7 days and 1 day by default, or at the times the user picked in Settings.
 10. Publishing, the Public tab, following, and follow alerts work, with no dollar amounts leaked.
 11. In-app and email alerts work. Push works on at least desktop Chrome and Android (or is marked "coming soon" if cut).
 12. Every error and loading state uses a friendly finance message.

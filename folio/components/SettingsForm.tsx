@@ -23,14 +23,16 @@ export type SettingsProfile = {
   notifyEmail: boolean;
   notifyPush: boolean;
   isPublic: boolean;
+  reminderFirst: number;
+  reminderSecond: number | null;
 };
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+function Section({ id, title, description, children }: { id?: string; title: string; description?: string; children: React.ReactNode }) {
   return (
-    <Card>
+    <Card id={id} className="scroll-mt-24">
       <h2 className="font-semibold">{title}</h2>
       {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       <div className="mt-4">{children}</div>
@@ -196,6 +198,28 @@ export function SettingsForm({ profile }: { profile: SettingsProfile }) {
             <Switch name="notifyInapp" label="In-App Alerts" description="The bell icon in the header." checked={toggles.notifyInapp} onChange={(v) => setToggles((t) => ({ ...t, notifyInapp: v }))} />
             <Switch name="notifyEmail" label="Email Alerts" badge="Coming Soon" description="Alerts by email are on the way. For now, they appear in the bell." checked={false} disabled onChange={() => undefined} />
             <Switch name="notifyPush" label="Phone Push Alerts" badge="Coming Soon" description="Lock-screen notifications are on the way." checked={false} disabled onChange={() => undefined} />
+          </div>
+        </Section>
+
+        <Section id="reminders" title="Earnings Reminders" description="Choose when you get an alert before a company you hold reports its results.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="First Reminder" htmlFor="reminderFirst">
+              <Select id="reminderFirst" name="reminderFirst" defaultValue={String(profile.reminderFirst)}>
+                {[14, 10, 7, 5, 3, 2].map((d) => (
+                  <option key={d} value={d}>
+                    {d} days before
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Second Reminder" htmlFor="reminderSecond">
+              <Select id="reminderSecond" name="reminderSecond" defaultValue={profile.reminderSecond == null ? "off" : String(profile.reminderSecond)} aria-invalid={status?.field === "reminderSecond"}>
+                <option value="1">1 day before</option>
+                <option value="0">On the day</option>
+                <option value="2">2 days before</option>
+                <option value="off">Off</option>
+              </Select>
+            </Field>
           </div>
         </Section>
 

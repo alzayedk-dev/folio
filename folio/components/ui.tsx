@@ -55,8 +55,8 @@ export function Alert({ tone = "error", children }: { tone?: "error" | "success"
   );
 }
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-line bg-white p-5 shadow-sm ${className}`}>{children}</div>;
+export function Card({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
+  return <div id={id} className={`rounded-2xl border border-line bg-white p-5 shadow-sm ${className}`}>{children}</div>;
 }
 
 export function Logo({ className = "" }: { className?: string }) {

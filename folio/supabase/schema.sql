@@ -357,3 +357,10 @@ select cron.schedule('folio-daily', '0 6 * * *', $job$
     headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', (select value from public.app_config where key = 'cron_secret')),
     body := '{}'::jsonb, timeout_milliseconds := 60000);
 $job$);
+
+-- ---------------------------------------------------------------
+-- Earnings reminder timing per user (first N days before, default 7; second N days before, default 1, null = off)
+-- ---------------------------------------------------------------
+alter table public.profiles
+  add column if not exists reminder_first integer not null default 7 check (reminder_first between 1 and 30),
+  add column if not exists reminder_second integer default 1 check (reminder_second is null or reminder_second between 0 and 30);

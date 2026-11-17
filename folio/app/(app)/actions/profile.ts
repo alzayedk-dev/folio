@@ -37,6 +37,8 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
       notify_email: v.notifyEmail,
       notify_push: v.notifyPush,
       is_public: v.isPublic,
+      reminder_first: v.reminderFirst,
+      reminder_second: v.reminderSecond,
     })
     .eq("id", user.id);
 

@@ -89,6 +89,7 @@ export const profileMessages = {
   bioLength: "Your bio can be up to 280 characters.",
   fullName: "Full name can be up to 100 characters.",
   currency: "Pick a base currency from the list.",
+  reminders: "The second reminder needs to come after the first one (fewer days before).",
 } as const;
 
 const checkbox = z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean());
@@ -103,8 +104,15 @@ export const profileSchema = z
     notifyEmail: checkbox,
     notifyPush: checkbox,
     isPublic: checkbox,
+    reminderFirst: z.coerce.number().int().min(1).max(30).optional().default(7),
+    reminderSecond: z
+      .union([z.literal("off"), z.coerce.number().int().min(0).max(30)])
+      .optional()
+      .default(1)
+      .transform((v) => (v === "off" ? null : v)),
   })
-  .refine((v) => !v.isPublic || v.bio.length >= 10, { message: profileMessages.bioNeeded, path: ["bio"] });
+  .refine((v) => !v.isPublic || v.bio.length >= 10, { message: profileMessages.bioNeeded, path: ["bio"] })
+  .refine((v) => v.reminderSecond == null || v.reminderSecond < v.reminderFirst, { message: profileMessages.reminders, path: ["reminderSecond"] });
 
 export type ProfileInput = z.infer<typeof profileSchema>;
 

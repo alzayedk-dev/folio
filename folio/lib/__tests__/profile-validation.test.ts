@@ -13,6 +13,16 @@ describe("profileSchema", () => {
     expect(r.error?.issues[0].message).toBe(profileMessages.bioNeeded);
     expect(profileSchema.safeParse({ ...base, isPublic: "on", bio: "Long-term dividend investor" }).success).toBe(true);
   });
+  it("defaults reminders to 7 days and 1 day before, and accepts custom or off", () => {
+    expect(profileSchema.parse(base)).toMatchObject({ reminderFirst: 7, reminderSecond: 1 });
+    expect(profileSchema.parse({ ...base, reminderFirst: "3", reminderSecond: "0" })).toMatchObject({ reminderFirst: 3, reminderSecond: 0 });
+    expect(profileSchema.parse({ ...base, reminderFirst: "10", reminderSecond: "off" })).toMatchObject({ reminderFirst: 10, reminderSecond: null });
+  });
+  it("requires the second reminder to come after the first", () => {
+    const r = profileSchema.safeParse({ ...base, reminderFirst: "2", reminderSecond: "5" });
+    expect(r.error?.issues[0].message).toBe(profileMessages.reminders);
+    expect(profileSchema.safeParse({ ...base, reminderFirst: "45" }).success).toBe(false);
+  });
   it("rejects long bios, bad names and unknown currencies", () => {
     expect(profileSchema.safeParse({ ...base, bio: "x".repeat(281) }).success).toBe(false);
     expect(profileSchema.safeParse({ ...base, displayName: "A" }).success).toBe(false);
