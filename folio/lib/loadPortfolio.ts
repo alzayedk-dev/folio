@@ -30,7 +30,7 @@ export async function loadLedgerData(supabase: SupabaseClient) {
   const [{ data: txRows, error: txErr }, { data: cashRows, error: cashErr }, { data: profile }] = await Promise.all([
     supabase.from("transactions").select("*").order("trade_date", { ascending: false }).order("created_at", { ascending: false }),
     supabase.from("cash_entries").select("*").order("entry_date", { ascending: false }),
-    supabase.from("profiles").select("display_name, base_currency").single(),
+    supabase.from("profiles").select("display_name, base_currency, show_shariah").single(),
   ]);
   if (txErr || cashErr) throw new Error("load_failed");
 
@@ -44,5 +44,5 @@ export async function loadLedgerData(supabase: SupabaseClient) {
     for (const s of symRows ?? []) symbols[s.ticker] = s as SymbolLike;
   }
 
-  return { txns, cash, symbols, baseCurrency: (profile?.base_currency as string) ?? "USD" };
+  return { txns, cash, symbols, baseCurrency: (profile?.base_currency as string) ?? "USD", showShariah: (profile?.show_shariah as boolean | undefined) ?? true };
 }

@@ -14,6 +14,8 @@ import { PriceChart } from "@/components/PriceChart";
 import { AddTransactionButton } from "@/components/AddTransactionButton";
 import { Skeleton } from "@/components/Skeleton";
 import { Alert, Card } from "@/components/ui";
+import { ShariahBadge } from "@/components/ShariahBadge";
+import { screen } from "@/lib/shariah";
 
 type Params = { params: Promise<{ ticker: string }> };
 
@@ -79,8 +81,10 @@ async function StockContent({ ticker }: { ticker: string }) {
   // The user's own position in this stock
   let position: { shares: number; avgCost: number; realized: number } | null = null;
   let positions = {};
+  let showShariah = true;
   if (ledgerRes.status === "fulfilled") {
     const { txns, cash, baseCurrency } = ledgerRes.value;
+    showShariah = ledgerRes.value.showShariah;
     const ledger = replayLedger(txns, cash, { base: baseCurrency });
     positions = toPositionSummary(ledger);
     const pos = ledger.positions[ticker];
@@ -102,6 +106,13 @@ async function StockContent({ ticker }: { ticker: string }) {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{metal ? p.name : `${p.ticker} · ${p.name}`}</h1>
             <p className="mt-1 text-sm text-muted">{[p.exchange, p.sector, p.currency].filter(Boolean).join(" · ")}</p>
+            {showShariah && (
+              <div className="mt-2">
+                <Suspense fallback={<span className="inline-block h-6 w-28 animate-pulse rounded-full bg-surface" role="status" aria-label="Loading Shariah screening" />}>
+                  <StockShariah ticker={ticker} />
+                </Suspense>
+              </div>
+            )}
           </div>
         </div>
         <AddTransactionButton positions={positions} presetTicker={ticker} />
@@ -187,4 +198,15 @@ async function StockContent({ ticker }: { ticker: string }) {
       )}
     </div>
   );
+}
+
+/** Streams in after the rest of the page so a slow lookup never holds up prices or the chart. */
+async function StockShariah({ ticker }: { ticker: string }) {
+  const supabase = await createClient();
+  try {
+    const facts = isMetal(ticker) ? {} : await market.shariah(supabase, [ticker]);
+    return <ShariahBadge result={screen(ticker, facts[ticker] ?? null)} size="md" />;
+  } catch {
+    return <span className="text-xs text-muted">{messages.shariahSlow}</span>;
+  }
 }

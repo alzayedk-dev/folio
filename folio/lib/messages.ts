@@ -8,6 +8,7 @@ export const messages = {
   signingIn: "Opening the trading floor…",
   creatingAccount: "Opening your account…",
 
+  shariahSlow: "Shariah data is still on its way from the exchange.",
   marketSlow: (asOf?: string) =>
     asOf
       ? `The market feed is catching its breath. Showing prices as of ${asOf}.`

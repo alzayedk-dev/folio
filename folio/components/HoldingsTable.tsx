@@ -9,6 +9,10 @@ import { SegmentedToggle } from "./SegmentedToggle";
 import { usePersistentState } from "./usePersistentState";
 import { WarningBadge } from "./WarningBadge";
 import { InfoTip } from "./InfoTip";
+import { ShariahBadge } from "./ShariahBadge";
+import { useShariah } from "./useShariah";
+import { messages } from "@/lib/messages";
+import { SHARIAH_NOTE } from "@/lib/shariah";
 
 type Mode = "usd" | "pct";
 type SortKey = "ticker" | "shares" | "avgCost" | "price" | "dayChange" | "value" | "weight" | "sector" | "pl";
@@ -53,6 +57,7 @@ export function HoldingsTable({
   totalValue,
   dayChange,
   unrealizedPL,
+  showShariah = false,
 }: {
   holdings: HoldingRow[];
   base: string;
@@ -61,9 +66,12 @@ export function HoldingsTable({
   totalValue: number;
   dayChange: number;
   unrealizedPL: number;
+  showShariah?: boolean;
 }) {
   const [mode, setMode] = usePersistentState<Mode>("folio.plMode", "usd", ["usd", "pct"]);
   const [sort, setSort] = useState<Sort>({ key: "value", dir: -1 });
+  const shariah = useShariah(useMemo(() => holdings.map((h) => h.ticker), [holdings]), showShariah);
+  const extra = showShariah ? 1 : 0;
 
   const sorted = useMemo(() => {
     const val = (h: HoldingRow): number | string => {
@@ -109,7 +117,7 @@ export function HoldingsTable({
 
       {/* Table at every width; scrolls sideways inside the box on small screens */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[60rem] text-sm">
+        <table className="w-full min-w-[66rem] text-sm">
           <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
             <tr>
               <SortHeader k="ticker" align="left" sticky sort={sort} onSort={toggleSort}>Stock</SortHeader>
@@ -120,6 +128,14 @@ export function HoldingsTable({
               <SortHeader k="value" sort={sort} onSort={toggleSort}>Total Value</SortHeader>
               <SortHeader k="weight" sort={sort} onSort={toggleSort}>% Of Portfolio</SortHeader>
               <SortHeader k="sector" align="left" sort={sort} onSort={toggleSort}>Sector</SortHeader>
+              {showShariah && (
+                <th scope="col" className="px-3 py-2 text-left font-medium">
+                  Shariah
+                  <span className="ml-1">
+                    <InfoTip text={`Halal screening using AAOIFI rules. Tap a badge for details. ${SHARIAH_NOTE}`} label="What Shariah means" />
+                  </span>
+                </th>
+              )}
               <SortHeader k="pl" sort={sort} onSort={toggleSort}>Profit / Loss</SortHeader>
               <th scope="col" className="px-3 py-3 text-left font-medium" title={WARNING_TITLE}>
                 Warning
@@ -145,6 +161,17 @@ export function HoldingsTable({
                 <td className="px-3 py-3 text-right font-medium">{money(h.value, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(h.weight)}</td>
                 <td className="px-3 py-3 text-left text-muted">{h.sector}</td>
+                {showShariah && (
+                  <td className="px-3 py-3 text-left">
+                    {shariah.results[h.ticker] ? (
+                      <ShariahBadge result={shariah.results[h.ticker]} />
+                    ) : shariah.status === "error" ? (
+                      <span className="text-xs text-muted" title={messages.shariahSlow}>—</span>
+                    ) : (
+                      <span className="inline-block h-4 w-20 animate-pulse rounded-full bg-surface" role="status" aria-label="Loading Shariah screening" />
+                    )}
+                  </td>
+                )}
                 <td className={`px-3 py-3 text-right font-medium ${gainClass(h.unrealizedPL)}`}>{plCell(h)}</td>
                 <td className="px-3 py-3">
                   <WarningBadge level={h.warning} title={WARNING_TITLE} />
@@ -159,7 +186,7 @@ export function HoldingsTable({
                 <td colSpan={4} />
                 <td className="px-3 py-3 text-right font-medium text-foreground">{money(metalsValue, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(totalValue ? (metalsValue / totalValue) * 100 : 0)}</td>
-                <td colSpan={3} />
+                <td colSpan={3 + extra} />
               </tr>
             )}
             {cashValue > 0.005 && (
@@ -168,7 +195,7 @@ export function HoldingsTable({
                 <td colSpan={4} />
                 <td className="px-3 py-3 text-right font-medium text-foreground">{money(cashValue, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(totalValue ? (cashValue / totalValue) * 100 : 0)}</td>
-                <td colSpan={3} />
+                <td colSpan={3 + extra} />
               </tr>
             )}
           </tbody>
@@ -179,7 +206,7 @@ export function HoldingsTable({
               <td className={`px-3 py-3 text-right ${gainClass(dayChange)}`}>{mode === "usd" ? money(dayChange, base, { sign: true }) : ""}</td>
               <td className="px-3 py-3 text-right">{money(totalValue, base)}</td>
               <td className="px-3 py-3 text-right">{totalValue > 0 ? "100%" : "—"}</td>
-              <td />
+              <td colSpan={1 + extra} />
               <td className={`px-3 py-3 text-right ${gainClass(unrealizedPL)}`}>{mode === "usd" ? money(unrealizedPL, base, { sign: true }) : ""}</td>
               <td />
             </tr>

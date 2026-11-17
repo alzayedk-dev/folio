@@ -73,6 +73,19 @@ const check = (name, pass, detail) => results.push({ name, pass, detail });
   r = await call({ action: "fx" });
   check("Exchange rates (USD base) incl. SAR, KWD, GBP", r.ok && r.data.rates.SAR > 0 && r.data.rates.KWD > 0 && r.data.rates.GBP > 0, r.ok ? `1 USD = ${r.data.rates.GBP} GBP, ${r.data.rates.SAR} SAR, ${r.data.rates.KWD} KWD` : JSON.stringify(r.error));
 
+  // Shariah screening facts
+  r = await call({ action: "shariah", tickers: ["AAPL", "MSFT", "JPM", "VOD.L", "SPY", "GC=F", "ZZZZNOTREAL"] });
+  const sh = r.data ?? {};
+  const ratio = (x) => (x && x.market_cap ? Number(x.total_debt) / Number(x.market_cap) : null);
+  check("Shariah facts for AAPL and MSFT (debt, cash, market value)", r.ok && sh.AAPL?.market_cap > 0 && sh.AAPL?.total_debt != null && sh.MSFT?.cash_investments != null, `AAPL debt/value ${(ratio(sh.AAPL) * 100).toFixed(1)}%, data ${sh.AAPL?.data_date}`);
+  check("JPM shows as a bank", /bank/i.test(sh.JPM?.industry ?? ""), sh.JPM?.industry);
+  check("London market value in pounds (debt ratio sensible)", ratio(sh["VOD.L"]) > 0.1 && ratio(sh["VOD.L"]) < 10, `VOD.L debt/value ${ratio(sh["VOD.L"])?.toFixed(2)}`);
+  check("ETF flagged as a fund; metals skipped; unknown ticker not found", sh.SPY?.quote_type === "ETF" && !sh["GC=F"] && sh.ZZZZNOTREAL?.found === false);
+  r = await call({ action: "shariah", tickers: ["AAPL", "JPM"] });
+  check("Shariah second call served from cache", r.ok && Object.values(r.data).every((x) => x.source === "cache"), `${r.ms} ms`);
+  const w = await c.from("shariah_cache").insert({ ticker: "HACKED" });
+  check("Users can't write to the Shariah cache", !!w.error, w.error?.code);
+
   for (const x of results) console.log(`${x.pass ? "PASS" : "FAIL"}  ${x.name}${x.detail !== undefined ? "\n      " + x.detail : ""}`);
   const failed = results.filter((x) => !x.pass).length;
   console.log(failed ? `\n${failed} check(s) FAILED` : `\nAll ${results.length} market checks passed`);

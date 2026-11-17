@@ -104,6 +104,7 @@ export const profileSchema = z
     notifyEmail: checkbox,
     notifyPush: checkbox,
     isPublic: checkbox,
+    showShariah: checkbox,
     reminderFirst: z.coerce.number().int().min(1).max(30).optional().default(7),
     reminderSecond: z
       .union([z.literal("off"), z.coerce.number().int().min(0).max(30)])

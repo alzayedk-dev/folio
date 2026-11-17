@@ -23,6 +23,7 @@ export type SettingsProfile = {
   notifyEmail: boolean;
   notifyPush: boolean;
   isPublic: boolean;
+  showShariah: boolean;
   reminderFirst: number;
   reminderSecond: number | null;
 };
@@ -48,6 +49,7 @@ export function SettingsForm({ profile }: { profile: SettingsProfile }) {
     notifyEmail: profile.notifyEmail,
     notifyPush: profile.notifyPush,
     isPublic: profile.isPublic,
+    showShariah: profile.showShariah,
   });
   const [bio, setBio] = useState(profile.bio);
   const [status, setStatus] = useState<{ tone: "error" | "success"; text: string; field?: string } | null>(null);
@@ -221,6 +223,16 @@ export function SettingsForm({ profile }: { profile: SettingsProfile }) {
               </Select>
             </Field>
           </div>
+        </Section>
+
+        <Section title="Shariah Screening" description="Halal screening for stocks, based on AAOIFI rules and public data. A guide, not a religious ruling.">
+          <Switch
+            name="showShariah"
+            label="Show Shariah Screening"
+            description={toggles.showShariah ? "Badges show on stock pages and in your holdings table." : "Hidden. Turn on to see halal screening badges."}
+            checked={toggles.showShariah}
+            onChange={(v) => setToggles((t) => ({ ...t, showShariah: v }))}
+          />
         </Section>
 
         <Section title="Public Portfolio" description="Share your allocation with other Folio users. Only percentages are shown, never dollar amounts, share counts or cash.">

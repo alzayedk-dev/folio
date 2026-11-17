@@ -364,3 +364,26 @@ $job$);
 alter table public.profiles
   add column if not exists reminder_first integer not null default 7 check (reminder_first between 1 and 30),
   add column if not exists reminder_second integer default 1 check (reminder_second is null or reminder_second between 0 and 30);
+
+-- ---------------------------------------------------------------
+-- Shariah screening (17 Nov): raw facts cached 7 days, rules run in lib/shariah.ts
+-- ---------------------------------------------------------------
+create table if not exists public.shariah_cache (
+  ticker text primary key,
+  quote_type text,
+  industry text,
+  yahoo_sector text,
+  total_debt numeric,
+  cash_investments numeric,
+  market_cap numeric,
+  currency text,
+  data_date date,
+  found boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+alter table public.shariah_cache enable row level security;
+create policy "shariah_cache: signed-in users read" on public.shariah_cache
+  for select to authenticated using (true);
+
+alter table public.profiles
+  add column if not exists show_shariah boolean not null default true;

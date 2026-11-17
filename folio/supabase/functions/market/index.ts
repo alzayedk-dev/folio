@@ -2,7 +2,7 @@
 // Holds the Finnhub key (Supabase secret) and talks to Finnhub + Yahoo Finance + exchange-rate APIs.
 // Every call must come from a signed-in user. Results are cached in Supabase tables.
 //
-// POST body: { action: "status" | "search" | "quote" | "profile" | "history" | "earnings" | "news" | "fx", ... }
+// POST body: { action: "status" | "search" | "quote" | "profile" | "history" | "earnings" | "news" | "fx" | "shariah", ... }
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -22,6 +22,7 @@ const yf = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 const QUOTE_TTL_MS = 60_000;
 const PROFILE_TTL_MS = 7 * 864e5;
 const MAX_TICKERS = 50;
+const SHARIAH_TTL_MS = 7 * 864e5; // balance sheets change quarterly
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -347,6 +348,71 @@ async function news(raw: unknown) {
   }
 }
 
+// ---------- Shariah screening facts (the rules themselves run in the app: lib/shariah.ts) ----------
+async function latestRates(): Promise<Record<string, number>> {
+  const { data: latest } = await admin.from("fx_rates").select("date").eq("base", "USD").order("date", { ascending: false }).limit(1);
+  if (!latest?.[0]) return {};
+  const { data } = await admin.from("fx_rates").select("quote, rate").eq("base", "USD").eq("date", latest[0].date);
+  return Object.fromEntries((data ?? []).map((r: any) => [r.quote, Number(r.rate)]));
+}
+
+const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+async function shariahFacts(ticker: string, rates: () => Promise<Record<string, number>>) {
+  const base = { ticker, updated_at: new Date().toISOString() };
+  let s: any;
+  try {
+    s = await yf.quoteSummary(ticker, { modules: ["price", "financialData", "defaultKeyStatistics", "assetProfile"] });
+  } catch {
+    return { ...base, found: false, quote_type: null, industry: null, yahoo_sector: null, total_debt: null, cash_investments: null, market_cap: null, currency: null, data_date: null };
+  }
+  const quoteType = s?.price?.quoteType ?? null;
+  // Yahoo gives market value in major units (pounds, not pence); balance sheet may be in another currency
+  const { currency } = normalizeCurrency(s?.price?.currency);
+  const marketCap = num(s?.price?.marketCap);
+  let debt = num(s?.financialData?.totalDebt);
+  let cash = num(s?.financialData?.totalCash);
+  const fin = normalizeCurrency(s?.financialData?.financialCurrency ?? currency).currency;
+  if (fin !== currency && (debt != null || cash != null)) {
+    const r = await rates();
+    const rFrom = fin === "USD" ? 1 : r[fin], rTo = currency === "USD" ? 1 : r[currency];
+    const k = rFrom && rTo ? rTo / rFrom : null;
+    debt = k != null && debt != null ? debt * k : null;
+    cash = k != null && cash != null ? cash * k : null;
+  }
+  const mrq = s?.defaultKeyStatistics?.mostRecentQuarter;
+  return {
+    ...base,
+    found: true,
+    quote_type: quoteType,
+    industry: s?.assetProfile?.industry ?? null,
+    yahoo_sector: s?.assetProfile?.sector ?? null,
+    total_debt: debt,
+    cash_investments: cash,
+    market_cap: marketCap,
+    currency,
+    data_date: mrq ? new Date(mrq).toISOString().slice(0, 10) : null,
+  };
+}
+
+async function shariah(raw: unknown) {
+  const tickers = parseTickers(raw);
+  const { data: cached } = await admin.from("shariah_cache").select("*").in("ticker", tickers);
+  const out: Record<string, any> = {};
+  const need: string[] = [];
+  for (const c of cached ?? []) if (Date.now() - new Date(c.updated_at).getTime() < SHARIAH_TTL_MS) out[c.ticker] = { ...c, source: "cache" };
+  for (const t of tickers) if (!out[t] && !t.includes("=")) need.push(t); // metals/futures: not screened
+  let ratesCache: Record<string, number> | null = null;
+  const rates = async () => (ratesCache ??= await latestRates());
+  const fresh: any[] = [];
+  for (let i = 0; i < need.length; i += 5) {
+    fresh.push(...(await Promise.all(need.slice(i, i + 5).map((t) => shariahFacts(t, rates)))));
+  }
+  if (fresh.length) await admin.from("shariah_cache").upsert(fresh);
+  for (const r of fresh) out[r.ticker] = { ...r, source: "yahoo" };
+  return out;
+}
+
 // ---------- exchange rates (USD-based table) ----------
 async function fx() {
   const { data: latest } = await admin.from("fx_rates").select("date").eq("base", "USD").order("date", { ascending: false }).limit(1);
@@ -423,6 +489,9 @@ Deno.serve(async (req) => {
         break;
       case "fx":
         data = await fx();
+        break;
+      case "shariah":
+        data = await shariah(body.tickers);
         break;
       default:
         throw new AppError("bad_input", "Unknown action");

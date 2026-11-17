@@ -2,6 +2,7 @@
 // (works with the browser client or the server client; both send the user's login token).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { messages } from "./messages";
+import type { ShariahFacts } from "./shariah";
 
 export type SearchResult = { ticker: string; name: string; exchange: string | null; type: "EQUITY" | "ETF" | string };
 export type Quote = {
@@ -79,6 +80,7 @@ export const market = {
   earnings: (s: SupabaseClient, tickers: string[]) => call<Record<string, string | null>>(s, { action: "earnings", tickers }),
   news: (s: SupabaseClient, ticker: string) => call<NewsItem[]>(s, { action: "news", ticker }),
   fx: (s: SupabaseClient) => call<FxTable>(s, { action: "fx" }),
+  shariah: (s: SupabaseClient, tickers: string[]) => call<Record<string, ShariahFacts>>(s, { action: "shariah", tickers }),
 };
 
 /** Converts an amount between currencies using a USD-based rate table (1 USD = rates[X] X). */

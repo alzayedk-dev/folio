@@ -30,7 +30,7 @@ export default function PortfolioPage() {
 
 async function PortfolioContent() {
   const supabase = await createClient();
-  const { ledger, valuation: v, notice, asOf, cash } = await loadValuation(supabase);
+  const { ledger, valuation: v, notice, asOf, cash, showShariah } = await loadValuation(supabase);
   const positions = toPositionSummary(ledger);
   after(() => refreshPublicSnapshotIfStale(supabase).catch(() => undefined));
   const hasAnything = v.holdings.length > 0 || v.cashValue > 0;
@@ -72,6 +72,7 @@ async function PortfolioContent() {
               totalValue={v.totalValue}
               dayChange={v.dayChange}
               unrealizedPL={v.unrealizedPL}
+              showShariah={showShariah}
             />
           ) : (
             <EmptyState title="No stocks yet.">Add a buy to see your holdings here.</EmptyState>
