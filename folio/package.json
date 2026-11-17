@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "privacy": "node scripts/privacy-check.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

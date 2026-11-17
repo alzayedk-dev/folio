@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "folio-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "folio", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}
