@@ -46,6 +46,19 @@ const check = (name, pass, detail) => results.push({ name, pass, detail });
   check("A's transaction unchanged", Number(r.data?.price) === 100);
   r = await B.from("symbols").insert({ ticker: "HACK", name: "x" });
   check("Users cannot write shared market data", !!r.error);
+  // Storage: B must not write into or delete from A's avatar folder
+  const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+  r = await B.storage.from("avatars").upload(`${aId}/intruder.png`, png, { contentType: "image/png" });
+  check("B cannot upload into A's avatar folder", !!r.error, r.error?.message);
+  const { data: aFiles } = await admin.storage.from("avatars").list(aId);
+  if (aFiles?.length) {
+    const del = await B.storage.from("avatars").remove([`${aId}/${aFiles[0].name}`]);
+    const still = await admin.storage.from("avatars").list(aId);
+    check("B cannot delete A's avatar", (still.data?.length ?? 0) === aFiles.length, JSON.stringify(del.error ?? del.data));
+  }
+  r = await B.from("profiles").update({ avatar_url: "https://evil.example/x.png" }).eq("id", aId).select();
+  check("B cannot change A's avatar URL", (r.data?.length ?? 0) === 0);
+
   const anon = createClient(url, pub, { auth: { persistSession: false } });
   r = await anon.from("transactions").select("*");
   check("Logged-out visitor sees no transactions", (r.data?.length ?? 0) === 0);

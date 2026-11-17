@@ -83,6 +83,38 @@ export const cashBalanceSchema = z
   })
   .refine((v) => v.entryDate <= latestTradeDate() && v.entryDate >= "1970-01-01", { message: cashMessages.date, path: ["entryDate"] });
 
+// ---------- profile / settings ----------
+export const profileMessages = {
+  bioNeeded: "Add a short bio or strategy before publishing, so followers know your approach.",
+  bioLength: "Your bio can be up to 280 characters.",
+  fullName: "Full name can be up to 100 characters.",
+  currency: "Pick a base currency from the list.",
+} as const;
+
+const checkbox = z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean());
+
+export const profileSchema = z
+  .object({
+    displayName: z.string().trim().min(2, messages.auth.nameLength).max(30, messages.auth.nameLength),
+    fullName: z.string().trim().max(100, profileMessages.fullName).optional().default(""),
+    bio: z.string().trim().max(280, profileMessages.bioLength).optional().default(""),
+    baseCurrency: z.enum(currencyCodes, { message: profileMessages.currency }),
+    notifyInapp: checkbox,
+    notifyEmail: checkbox,
+    notifyPush: checkbox,
+    isPublic: checkbox,
+  })
+  .refine((v) => !v.isPublic || v.bio.length >= 10, { message: profileMessages.bioNeeded, path: ["bio"] });
+
+export type ProfileInput = z.infer<typeof profileSchema>;
+
+/** Avatar URLs must point at the user's own folder in our public avatars bucket (or be empty to remove). */
+export function isOwnAvatarUrl(url: string, supabaseUrl: string, userId: string): boolean {
+  if (url === "") return true;
+  const prefix = `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/avatars/${userId}/`;
+  return url.startsWith(prefix) && !url.slice(prefix.length).includes("..") && /^[\w.\-/]+$/.test(url.slice(prefix.length));
+}
+
 /** Only allow redirects to our own pages (prevents open redirects via ?next=). */
 export function safeNext(next: string | null | undefined, fallback = "/portfolio"): string {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;
