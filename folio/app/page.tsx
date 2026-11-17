@@ -6,10 +6,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 
 const DELIVERABLES = [
   "Follow your stocks, ETFs, gold and silver with live prices",
-  "Manage every buy, sell and dividend in seconds",
   "Get the latest news and earnings dates for your holdings",
   "Spot risky sector concentration before it builds up",
-  "Measure your returns against the S&P 500, Nasdaq and Dow",
+  "Track your returns against the S&P 500, Nasdaq and Dow",
 ];
 
 const FEATURES = [
@@ -126,7 +125,7 @@ export default async function Home() {
               Your Stocks. Your Gold. <span className="text-brand">One Clear View.</span>
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted">
-              Follow every stock and precious metal you own, manage every trade in seconds, and stay ahead with live prices, news on your holdings and earnings alerts, all in one calm, professional dashboard.
+              Follow every stock and precious metal you own, track your returns, and stay ahead with live prices, news on your holdings and earnings alerts, all in one calm dashboard.
             </p>
             <ul className="mt-6 space-y-2.5">
               {DELIVERABLES.map((d) => (
@@ -198,7 +197,7 @@ export default async function Home() {
         {/* Final call to action */}
         <section className="mx-auto max-w-6xl px-4 py-16 text-center">
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Take Control Of Your Portfolio Today</h2>
-          <p className="mt-2 text-muted">Follow, manage and stay updated on everything you own, in about a minute.</p>
+          <p className="mt-2 text-muted">Follow your holdings, track your returns and stay updated, in about a minute.</p>
           <Link href="/signup" className="mt-6 inline-block rounded-lg bg-brand px-6 py-3 font-medium text-white hover:bg-brand-strong">
             Start Tracking Free
           </Link>
