@@ -104,6 +104,27 @@ describe("replayLedger: cash", () => {
     expect(l.netDeposited).toBeCloseTo(600);
   });
 
+  it("starting cash is a balance check-point: older back-dated trades don't change it", () => {
+    // Signed up today with $10,000 in the account, then recorded older trades
+    const l = replayLedger(
+      [buy("LLY", 10, 780, "2025-11-03", { fees: 4.95 }), dividend("LLY", 9, "2026-03-10"), sell("LLY", 4, 900, "2026-06-15", { fees: 4.95 })],
+      [cash("starting", 10000, "USD", "2026-11-17")],
+    );
+    expect(l.cash.USD).toBeCloseTo(10000);
+    // A trade after the check-point moves cash from there
+    const later = replayLedger([buy("AAPL", 1, 200, "2026-11-20")], [cash("starting", 10000, "USD", "2026-11-17")]);
+    expect(later.cash.USD).toBeCloseTo(9800);
+  });
+
+  it("a balance check-point replaces balances in other currencies too", () => {
+    const l = replayLedger(
+      [buy("VOD.L", 100, 1, "2026-01-02", { currency: "GBP" }), sell("VOD.L", 100, 1.2, "2026-02-02", { currency: "GBP" })],
+      [cash("starting", 500, "USD", "2026-03-01")],
+      { fx, base: "USD" },
+    );
+    expect(l.cash).toEqual({ USD: 500 });
+  });
+
   it("sell proceeds land in the stock's currency", () => {
     const l = replayLedger(
       [buy("VOD.L", 100, 1.1, "2026-01-02", { currency: "GBP" }), sell("VOD.L", 100, 1.2, "2026-02-02", { currency: "GBP" })],

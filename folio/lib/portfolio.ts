@@ -107,7 +107,14 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
       order: 0,
       tie: c.id,
       run: () => {
-        if (c.kind === "withdrawal") {
+        if (c.kind === "starting") {
+          // Balance check-point: "this is the cash in my account on this date". It already includes
+          // everything that happened before, so it replaces all balances; the difference counts as money in/out.
+          const before = Object.entries(cash).reduce((a, [ccy, amt]) => a + toBase(amt, ccy), 0);
+          for (const k of Object.keys(cash)) delete cash[k];
+          cash[c.currency] = c.amount;
+          netDeposited += toBase(c.amount, c.currency) - before;
+        } else if (c.kind === "withdrawal") {
           addCash(c.currency, -c.amount);
           netDeposited -= toBase(c.amount, c.currency);
         } else {
