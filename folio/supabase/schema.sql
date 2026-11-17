@@ -283,3 +283,29 @@ create policy "avatars: owner uploads" on storage.objects
 create policy "avatars: owner deletes" on storage.objects
   for delete to authenticated
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- ---------------------------------------------------------------
+-- Public snapshots: percent-only copy of a published portfolio (no amounts, share counts or cash)
+-- ---------------------------------------------------------------
+create table public.public_snapshots (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  display_name text not null,
+  bio text,
+  avatar_url text,
+  holdings jsonb not null default '[]'::jsonb,
+  sectors jsonb not null default '[]'::jsonb,
+  returns jsonb not null default '{}'::jsonb,
+  performance jsonb not null default '[]'::jsonb,
+  holdings_count int not null default 0,
+  updated_at timestamptz not null default now()
+);
+create or replace function public.is_public_user(uid uuid)
+returns boolean language sql stable security definer set search_path = ''
+as $$ select coalesce((select p.is_public from public.profiles p where p.id = uid), false); $$;
+revoke execute on function public.is_public_user(uuid) from public, anon;
+grant execute on function public.is_public_user(uuid) to authenticated;
+alter table public.public_snapshots enable row level security;
+create policy "snapshots: owner all" on public.public_snapshots
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create policy "snapshots: read when public" on public.public_snapshots
+  for select to authenticated using (public.is_public_user(user_id));

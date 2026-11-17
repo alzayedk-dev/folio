@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isOwnAvatarUrl, profileSchema } from "@/lib/validation";
 import { messages } from "@/lib/messages";
 import type { ActionResult } from "./transactions";
+import { refreshPublicSnapshot } from "@/lib/publicSnapshot";
 
 async function getUserClient() {
   const supabase = await createClient();
@@ -42,6 +44,9 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
     if (error.code === "23505") return { ok: false, error: "That display name is taken. Try another one.", field: "displayName" };
     return { ok: false, error: messages.generic };
   }
+  // Unpublish → delete the % snapshot immediately; publish → build it right after the response is sent
+  if (v.isPublic) after(() => refreshPublicSnapshot(supabase).catch(() => undefined));
+  else await supabase.from("public_snapshots").delete().eq("user_id", user.id);
   revalidatePath("/", "layout");
   return { ok: true };
 }

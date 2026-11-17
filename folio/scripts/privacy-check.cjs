@@ -59,6 +59,27 @@ const check = (name, pass, detail) => results.push({ name, pass, detail });
   r = await B.from("profiles").update({ avatar_url: "https://evil.example/x.png" }).eq("id", aId).select();
   check("B cannot change A's avatar URL", (r.data?.length ?? 0) === 0);
 
+  // Public snapshots: % only, visible only while the owner is public
+  const { data: aProfile } = await admin.from("profiles").select("is_public").eq("id", aId).single();
+  if (aProfile?.is_public) {
+    r = await B.from("public_snapshots").select("*").eq("user_id", aId);
+    check("B can read A's published snapshot", r.data?.length === 1);
+    const json = JSON.stringify(r.data?.[0] ?? {}).toLowerCase();
+    const banned = ["shares", "price", "cash", "avgcost", "costbasis", "\"value\"", "amount"].filter((k) => json.includes(k));
+    check("Snapshot contains no amounts, shares, prices or cash", banned.length === 0, banned.join(","));
+    r = await B.from("profiles").select("full_name").eq("id", aId);
+    check("Publishing doesn't expose A's private profile", (r.data?.length ?? 0) === 0);
+    r = await B.from("public_snapshots").update({ display_name: "Hacked" }).eq("user_id", aId).select();
+    check("B cannot edit A's snapshot", (r.data?.length ?? 0) === 0);
+    // Flip A to private directly in the database: the snapshot must disappear for B even before the app deletes it
+    await admin.from("profiles").update({ is_public: false }).eq("id", aId);
+    r = await B.from("public_snapshots").select("user_id").eq("user_id", aId);
+    check("Unpublished snapshot is hidden immediately", (r.data?.length ?? 0) === 0);
+    await admin.from("profiles").update({ is_public: true }).eq("id", aId);
+  }
+  r = await B.from("transactions").select("id").eq("user_id", aId);
+  check("Publishing never exposes A's transactions", (r.data?.length ?? 0) === 0);
+
   const anon = createClient(url, pub, { auth: { persistSession: false } });
   r = await anon.from("transactions").select("*");
   check("Logged-out visitor sees no transactions", (r.data?.length ?? 0) === 0);

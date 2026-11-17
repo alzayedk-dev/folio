@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { after } from "next/server";
+import { refreshPublicSnapshotIfStale } from "@/lib/publicSnapshot";
 import { createClient } from "@/lib/supabase/server";
 import { loadValuation } from "@/lib/loadValuation";
 import { toPositionSummary } from "@/lib/positionSummary";
@@ -30,6 +32,7 @@ async function PortfolioContent() {
   const supabase = await createClient();
   const { ledger, valuation: v, notice, asOf, cash } = await loadValuation(supabase);
   const positions = toPositionSummary(ledger);
+  after(() => refreshPublicSnapshotIfStale(supabase).catch(() => undefined));
   const hasAnything = v.holdings.length > 0 || v.cashValue > 0;
   const stocks = v.holdings.filter((h) => h.sector !== METALS_SECTOR);
   const metals = v.holdings.filter((h) => h.sector === METALS_SECTOR);

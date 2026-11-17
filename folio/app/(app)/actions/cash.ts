@@ -5,8 +5,13 @@ import { createClient } from "@/lib/supabase/server";
 import { cashBalanceSchema } from "@/lib/validation";
 import { messages } from "@/lib/messages";
 import type { ActionResult } from "./transactions";
+import { after } from "next/server";
+import { refreshPublicSnapshot } from "@/lib/publicSnapshot";
 
-const refresh = () => ["/portfolio", "/performance"].forEach((p) => revalidatePath(p));
+function refresh(supabase: Awaited<ReturnType<typeof createClient>>) {
+  ["/portfolio", "/performance"].forEach((p) => revalidatePath(p));
+  after(() => refreshPublicSnapshot(supabase).catch(() => undefined));
+}
 
 /** "This is how much cash I have": records a balance check-point (replaces earlier balances from that date). */
 export async function setCashBalance(formData: FormData): Promise<ActionResult> {
@@ -30,7 +35,7 @@ export async function setCashBalance(formData: FormData): Promise<ActionResult> 
     note: v.note || "Balance update",
   });
   if (error) return { ok: false, error: messages.generic };
-  refresh();
+  refresh(supabase);
   return { ok: true };
 }
 
@@ -43,6 +48,6 @@ export async function deleteCashEntry(id: string): Promise<ActionResult> {
   // RLS guarantees users can only delete their own rows; .select() tells us whether anything was deleted
   const { data, error } = await supabase.from("cash_entries").delete().eq("id", id).select("id");
   if (error || !data?.length) return { ok: false, error: "That cash entry isn't on your books anymore." };
-  refresh();
+  refresh(supabase);
   return { ok: true };
 }

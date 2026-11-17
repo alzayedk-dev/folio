@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { refreshPublicSnapshot } from "@/lib/publicSnapshot";
 import { createClient } from "@/lib/supabase/server";
 import { transactionSchema } from "@/lib/validation";
 import { replayLedger, type Txn } from "@/lib/portfolio";
@@ -11,7 +13,11 @@ import { isMetal } from "@/lib/metals";
 export type ActionResult = { ok: true } | { ok: false; error: string; field?: string };
 
 const PATHS = ["/portfolio", "/transactions", "/performance"];
-const refresh = () => PATHS.forEach((p) => revalidatePath(p));
+function refresh(supabase?: Awaited<ReturnType<typeof createClient>>) {
+  PATHS.forEach((p) => revalidatePath(p));
+  // keep the public % snapshot current (no-op for private users); runs after the response is sent
+  if (supabase) after(() => refreshPublicSnapshot(supabase).catch(() => undefined));
+}
 
 async function getUserClient() {
   const supabase = await createClient();
@@ -74,7 +80,7 @@ export async function createTransaction(formData: FormData): Promise<ActionResul
 
   const { error } = await supabase.from("transactions").insert(row);
   if (error) return { ok: false, error: messages.generic };
-  refresh();
+  refresh(supabase);
   return { ok: true };
 }
 
@@ -98,7 +104,7 @@ export async function updateTransaction(id: string, formData: FormData): Promise
     .update({ type: updated.type, shares: updated.shares, price: updated.price, amount: updated.amount, fees: updated.fees, trade_date: updated.tradeDate, notes: v.notes || null })
     .eq("id", id);
   if (error) return { ok: false, error: messages.generic };
-  refresh();
+  refresh(supabase);
   return { ok: true };
 }
 
@@ -115,6 +121,6 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
 
   const { error } = await supabase.from("transactions").delete().eq("id", id);
   if (error) return { ok: false, error: messages.generic };
-  refresh();
+  refresh(supabase);
   return { ok: true };
 }
