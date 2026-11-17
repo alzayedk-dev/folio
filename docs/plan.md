@@ -282,6 +282,41 @@ Decisions: shown on stock pages and in the holdings table; on by default with a 
 #### ✅ Checkpoint G
 Stock pages and the holdings table show correct badges for a mix of allowed, not-allowed, mixed and ETF tickers. The details box shows each rule with numbers and the note. The Settings switch hides and shows it. All tests pass on the live site.
 
+### Phase 8: Multiple portfolios, Real and Paper (about 7 h, planned 17 Nov, not started)
+Decisions: the button sits next to the portfolio switcher under the tab bar; the two types are called Real and Paper; any number of either, up to 10 in total, named freely; Paper portfolios have their own pretend cash and accept any date and price; comparing is a % chart overlay on Performance; each portfolio is published separately and followed separately; earnings reminders and the AI cover Paper too; delete needs the name typed to confirm.
+
+- **Task 28: Database (about 1.5 h).**
+  - New `portfolios` table: id, user_id, name (1–40 characters, unique per user), kind ('real' or 'paper'), is_public, position, created_at. RLS: the owner can do everything; others can read it only when it's published. A trigger caps it at 10 per user.
+  - Add `portfolio_id` (not null, deleted along with its portfolio) to `transactions` and `cash_entries`. RLS insert and update checks confirm the portfolio belongs to the user.
+  - Moving existing data: create "My Portfolio" (real) for every user, carry over `profiles.is_public`, fill in `portfolio_id` on all trades and cash, then make it required.
+  - `handle_new_user` creates "My Portfolio" and puts the sign-up starting cash into it.
+  - **Tests:** `privacy-check` gets new checks: user B can't read A's portfolios or add trades to them, an 11th portfolio is refused, a published portfolio is readable and an unpublished one isn't, and deleting a portfolio removes its trades.
+- **Task 29: Current portfolio everywhere (about 1.5 h).**
+  - `lib/currentPortfolio.ts` reads the chosen portfolio from a cookie (`folio.portfolio`), checks it belongs to the user, and falls back to the first one.
+  - `loadLedgerData`, valuation, performance, transactions and the stock page "Your Position" filter by it. Server actions (transactions, cash) write to the current portfolio and re-check ownership.
+  - **Tests:** unit tests for the fallback logic; two portfolios with different trades show different totals.
+- **Task 30: Switcher, New Portfolio and Manage (about 1.5 h).**
+  - A `PortfolioSwitcher` bar under the tab bar: the current name plus a Paper label, a dropdown of all portfolios, a **+ New Portfolio** button and **Manage**. It works on phones too.
+  - `NewPortfolioModal`: Name, a Real or Paper choice with one-line explanations, Starting Cash and Currency (required for Paper).
+  - `ManagePortfolioModal`: rename, a Publish switch (asks for a bio if missing), and Delete with the name typed to confirm.
+  - Friendly messages: "You've reached 10 portfolios, the desk is full.", "You already have a portfolio with that name."
+- **Task 31: Public and follow per portfolio (about 1 h).**
+  - `public_snapshots` keyed by portfolio, with its name and type. `follows` gets `portfolio_id`. `notify_followers` alerts only that portfolio's followers ("TechBull88 · Paper: Growth Lab bought NVDA").
+  - The Public tab shows one card per published portfolio with the Paper label. Pages move to `/public/p/[portfolioId]`, and old `/public/[userId]` links redirect.
+  - Settings: the Public Portfolio section becomes a note pointing to Manage; the bio stays.
+- **Task 32: Compare on Performance (about 1 h).**
+  - A **Compare With** multi-select of the user's other portfolios. Each one is drawn as a % line using the existing time-weighted return code; choosing any portfolio switches the chart to %. Colours stay consistent, and each line is labelled in the legend.
+  - **Tests:** a unit test that two portfolios' series line up by date.
+- **Task 33: AI, reminders, Paper labels, and checks (about 0.5 h).**
+  - The AI context uses the current portfolio and mentions "Paper" when it is one. The daily job already groups by user and ticker (so there are no duplicate alerts); confirm it.
+  - Paper labels on the switcher, the Public cards and page titles.
+- **Task 34: Test, deploy, check live, log (about 0.5 h).**
+  - Unit tests, privacy check, market check and build.
+  - On the live site: create a Paper portfolio with $10,000, add a backdated buy, switch back and forth, compare on Performance, publish it and follow it from user B, rename it, delete it, try an 11th portfolio, and check phone width.
+
+#### ✅ Checkpoint H
+A user can keep several Real and Paper portfolios with fully separate trades and cash, switch between them, compare them in %, publish and follow them one by one, and delete them safely. Nobody can see or change another user's unpublished portfolios. Everything passes on the live site.
+
 ## Suggested schedule
 | Block | Tasks | Goal |
 |---|---|---|

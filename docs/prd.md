@@ -214,6 +214,36 @@ Opens when a ticker is clicked.
 
 **Data:** company industry and balance-sheet figures (total debt, cash, short-term investments) and market value, all from Yahoo Finance for free. Results are saved for 7 days, because balance sheets only change each quarter.
 
+### 3.16 Multiple Portfolios (Real and Paper)
+**Why:** investors often keep several accounts, and many like to test ideas with pretend money before risking real money. Folio lets each user keep up to **10 portfolios**, either **Real** or **Paper**, and compare them.
+
+**Creating one**
+- A **+ New Portfolio** button sits next to the portfolio switcher (see below).
+- The pop-up asks for:
+  - **Name:** anything the user likes, up to 40 characters.
+  - **Type:** **Real** (money you actually invested) or **Paper** (practice with pretend money; "paper trading" is the usual investing term).
+  - **Starting Cash and Currency:** required for Paper (for example $10,000), optional for Real.
+- Every new account starts with one Real portfolio called "My Portfolio". Existing users' trades move into it automatically.
+- Users can have **any number of Real and Paper portfolios** (up to 10 in total) and name them however they like.
+
+**Switching**
+- A **portfolio switcher** sits just under the top tab bar, showing the current portfolio's name. Paper portfolios carry a small **Paper** label.
+- Choosing a portfolio changes what the Portfolio, Trades, Performance, AI and stock pages show. Folio remembers the last one chosen.
+- A **Manage** option in the switcher lets the user rename a portfolio, publish or unpublish it, or delete it.
+
+**Paper portfolios**
+- They work exactly like Real ones: the same pop-up for Buy, Sell and Dividend, any trade date and any price (so users can test "what if I'd bought in 2023"), their own pretend cash, the same tables, warnings and Shariah badges.
+- They're labelled **Paper** everywhere they appear, including on the Public tab.
+
+**Comparing**
+- On the **Performance** tab, a **Compare With** menu lets the user add other portfolios to the chart as % return lines, next to the S&P 500, Nasdaq and Dow benchmarks. Comparing always uses %, because the portfolios hold different amounts of money.
+
+**Other features**
+- **Publishing:** each portfolio has its own **Publish** switch (in Manage). Each published portfolio is its own card on the Public tab, % only as before. Followers follow a **specific portfolio** and get alerts only for its trades. Publishing still needs a bio on the profile.
+- **Earnings reminders:** cover stocks held in any of the user's portfolios, Real or Paper, with one alert per stock even if several portfolios hold it.
+- **AI analyst:** knows which portfolio the user is viewing and answers about that one, Real or Paper.
+- **Deleting:** the user has to type the portfolio's name to confirm. Its trades and cash are removed for good. The last remaining portfolio can't be deleted.
+
 ### 3.12 About and Contact pages
 - **About page:** explains what Folio is for, who it helps, what it does and doesn't do (monitors, never trades or advises), and where the data comes from.
 - **Contact page:** Khaled Alzayed with the contact email (alzayed.k@yahoo.com, shown as a clickable email link).
@@ -342,6 +372,7 @@ docs/             this PRD and the build plan
 13. About and Contact pages are reachable from the header and footer, also when logged out.
 14. All unit tests pass, the production build succeeds, and the app works on the live Vercel URL at desktop and phone width.
 15. Stock pages and the holdings table show a Shariah badge with rule-by-rule details. It is on by default, can be hidden in Settings, and always shows the "not a religious ruling" note.
+16. Users can create, switch, rename, publish and delete up to 10 portfolios (Real or Paper). Each one's data stays separate, Paper portfolios are labelled everywhere, and the Performance tab can compare portfolios in %.
 
 ---
 
@@ -355,6 +386,7 @@ docs/             this PRD and the build plan
 - Tax reports: later
 - Dividend purification amounts (how much of each dividend to give to charity): later
 - Choosing between Shariah standards (DJIM, S&P): AAOIFI only for now
+- An "All Portfolios" combined view and a side-by-side comparison table: later (comparing is the % chart for now)
 - Shariah badges on public portfolios and in ticker search: later
 
 ---
