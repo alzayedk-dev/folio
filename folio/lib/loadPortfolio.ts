@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CashEntry, SymbolLike, Txn } from "./portfolio";
+import type { MetalForm } from "./metals";
 import { getCurrentPortfolio } from "./currentPortfolio";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -24,7 +25,21 @@ export function rowToCash(r: any): CashEntry {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-export type TxnWithNotes = Txn & { notes: string | null };
+/** How a gold/silver trade was entered (display only; shares are pure troy oz). */
+export type MetalDetails = { metalForm: MetalForm | null; coinCode: string | null; coinCount: number | null; coinGrams: number | null; purity: number | null };
+export type TxnWithNotes = Txn & { notes: string | null } & MetalDetails;
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function rowToMetalDetails(r: any): MetalDetails {
+  return {
+    metalForm: r.metal_form ?? null,
+    coinCode: r.coin_code ?? null,
+    coinCount: r.coin_count == null ? null : Number(r.coin_count),
+    coinGrams: r.coin_grams == null ? null : Number(r.coin_grams),
+    purity: r.purity == null ? null : Number(r.purity),
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * Loads everything the calculation engine needs for one of the signed-in user's portfolios
@@ -46,7 +61,7 @@ export async function loadLedgerData(supabase: SupabaseClient, portfolioId?: str
   ]);
   if (txErr || cashErr) throw new Error("load_failed");
 
-  const txns: TxnWithNotes[] = (txRows ?? []).map((r) => ({ ...rowToTxn(r), notes: r.notes ?? null }));
+  const txns: TxnWithNotes[] = (txRows ?? []).map((r) => ({ ...rowToTxn(r), notes: r.notes ?? null, ...rowToMetalDetails(r) }));
   const cash = (cashRows ?? []).map(rowToCash);
 
   const tickers = [...new Set(txns.map((t) => t.ticker))];

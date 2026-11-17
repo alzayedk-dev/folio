@@ -7,11 +7,29 @@ import { market, MarketError, type SearchResult } from "@/lib/market";
 import { messages } from "@/lib/messages";
 import { money, price as fmtPrice, shares as fmtShares, todayLocal, gainClass } from "@/lib/format";
 import { createTransaction, updateTransaction } from "@/app/(app)/actions/transactions";
-import { METALS, METALS_SECTOR, fromOunces, fromPricePerOunce, isMetal, metalTicker, toOunces, toPricePerOunce, type WeightUnit } from "@/lib/metals";
+import {
+  GRAMS_PER_TROY_OUNCE,
+  METALS,
+  METALS_SECTOR,
+  PURITIES,
+  WEIGHT_UNITS,
+  barFineOz,
+  coinsFor,
+  customFineOz,
+  findCoin,
+  fromOunces,
+  fromPricePerOunce,
+  isMetal,
+  metalTicker,
+  toOunces,
+  toPricePerOunce,
+  type MetalForm,
+  type WeightUnit,
+} from "@/lib/metals";
 import { SegmentedToggle } from "./SegmentedToggle";
 import { Modal } from "./Modal";
 import { TickerSearch } from "./TickerSearch";
-import { Alert, Button, Field, Input } from "./ui";
+import { Alert, Button, Field, Input, Select } from "./ui";
 
 export type PositionSummary = Record<string, { shares: number; avgCost: number; currency: string }>;
 
@@ -27,7 +45,18 @@ export type EditableTxn = {
   currency: string;
   tradeDate: string;
   notes: string | null;
+  metalForm?: MetalForm | null;
+  coinCode?: string | null;
+  coinCount?: number | null;
+  coinGrams?: number | null;
+  purity?: number | null;
 };
+
+const METAL_FORMS: { value: MetalForm; label: string }[] = [
+  { value: "bar", label: "Bar / Pure" },
+  { value: "coin", label: "Coin" },
+  { value: "custom", label: "Custom Coin" },
+];
 
 type Picked = { ticker: string; name: string; exchange: string | null; currency: string; sector: string; currentPrice: number | null; stale?: boolean };
 
@@ -62,6 +91,13 @@ export function TransactionModal({
   const [saving, setSaving] = useState(false);
   const [unit, setUnitState] = useState<WeightUnit>("oz");
   const metal = !!picked && isMetal(picked.ticker);
+  const metalKey = picked && isMetal(picked.ticker) ? METALS[picked.ticker].key : "gold";
+  // How gold/silver is entered: a bar (weight + purity), a coin from the list, or a custom coin
+  const [metalForm, setMetalForm] = useState<MetalForm>("bar");
+  const [coinCode, setCoinCode] = useState<string>("");
+  const [purity, setPurity] = useState<number>(1);
+  const [coinGrams, setCoinGrams] = useState<string>("");
+  const [customPurity, setCustomPurity] = useState<string>("");
 
   /** Switching oz ⇄ g converts whatever has been typed so the trade stays the same. */
   function setUnit(next: WeightUnit) {
@@ -88,6 +124,11 @@ export function TransactionModal({
       const quote = q?.quotes[ticker];
       setUnitState("oz");
       setType("buy");
+      setMetalForm("bar");
+      setPurity(1);
+      setCoinCode(coinsFor(key)[0]?.code ?? "");
+      setCoinGrams("");
+      setCustomPurity("");
       setPicked({ ticker, name: METALS[ticker].name, exchange: "COMEX", currency: "USD", sector: METALS_SECTOR, currentPrice: quote?.price ?? null, stale: quote?.stale });
     } finally {
       setLoadingInfo(false);
@@ -103,9 +144,28 @@ export function TransactionModal({
     if (editing) {
       setPicked({ ticker: editing.ticker, name: editing.name, exchange: null, currency: editing.currency, sector: "", currentPrice: null });
       setType(editing.type);
+      let shares = editing.shares?.toString() ?? "";
+      let price = editing.price?.toString() ?? "";
+      const round = (x: number, d = 6) => String(Math.round(x * 10 ** d) / 10 ** d);
+      const paid = (editing.shares ?? 0) * (editing.price ?? 0);
+      const form = isMetal(editing.ticker) ? editing.metalForm ?? "bar" : "bar";
+      setMetalForm(form);
+      setCoinCode(editing.coinCode ?? coinsFor(isMetal(editing.ticker) ? METALS[editing.ticker].key : "gold")[0]?.code ?? "");
+      setCoinGrams(editing.coinGrams ? String(editing.coinGrams) : "");
+      setCustomPurity(editing.metalForm === "custom" && editing.purity ? round(editing.purity * 100, 3) : "");
+      setPurity(editing.metalForm === "bar" && editing.purity ? editing.purity : 1);
+      if (isMetal(editing.ticker) && (form === "coin" || form === "custom") && editing.coinCount) {
+        // back to "number of coins" and "price per coin"
+        shares = String(editing.coinCount);
+        price = round(paid / editing.coinCount, 2); // cents: stored price-per-ounce rounding would otherwise show e.g. 210.0002
+      } else if (isMetal(editing.ticker) && form === "bar" && editing.purity && editing.purity < 1 && editing.shares) {
+        // back to the bar's full weight (pure weight ÷ purity) and price per ounce of bar
+        shares = round(editing.shares / editing.purity);
+        price = round((editing.price ?? 0) * editing.purity, 4);
+      }
       setForm({
-        shares: editing.shares?.toString() ?? "",
-        price: editing.price?.toString() ?? "",
+        shares,
+        price,
         amount: editing.amount?.toString() ?? "",
         fees: editing.fees ? editing.fees.toString() : "",
         tradeDate: editing.tradeDate,
@@ -156,11 +216,24 @@ export function TransactionModal({
   const owned = (pos?.shares ?? 0) + (editing?.type === "sell" && editing.shares ? editing.shares : 0) - (editing?.type === "buy" && editing.shares ? editing.shares : 0);
   const ccy = picked?.currency ?? "USD";
   const valid = Number.isFinite(qty) && Number.isFinite(px) && Number.isFinite(fee);
-  // For metals, positions are stored in troy ounces; show them in the chosen unit
-  const ownedInUnit = metal ? fromOunces(owned, unit) : owned;
-  const avgInUnit = pos ? (metal ? fromPricePerOunce(pos.avgCost, unit) : pos.avgCost) : 0;
-  const currentInUnit = picked?.currentPrice != null ? (metal ? fromPricePerOunce(picked.currentPrice, unit) : picked.currentPrice) : null;
-  const unitWord = unit === "oz" ? "Ounce" : "Gram";
+  // For metals, positions are stored in PURE troy ounces; coins and bars below 24k are converted to pure content
+  const coin = findCoin(coinCode);
+  const customP = Number(customPurity) / 100;
+  const isCoinForm = metal && (metalForm === "coin" || metalForm === "custom");
+  const fineOzPerCoin = metalForm === "coin" ? coin?.fineOz ?? NaN : customFineOz(1, Number(coinGrams), customP);
+  const fineOz = !metal ? NaN : metalForm === "bar" ? barFineOz(qty, unit, purity) : qty * fineOzPerCoin;
+  const unitLabel = WEIGHT_UNITS.find((u) => u.value === unit)?.label ?? "Troy Oz";
+  const unitShort = WEIGHT_UNITS.find((u) => u.value === unit)?.short ?? "oz";
+  const unitWord = unit === "oz" ? "Ounce" : unit === "g" ? "Gram" : "Tola";
+  const ownedLabel = metal ? `${fmtShares(Math.round(Math.max(fromOunces(owned, isCoinForm ? "g" : unit), 0) * 1e4) / 1e4)} ${isCoinForm ? "g" : unitShort} pure` : `${fmtShares(Math.round(Math.max(owned, 0) * 1e4) / 1e4)} shares`;
+  const spot = picked?.currentPrice ?? null;
+  // Current price in the same terms the user types: per share, per unit of bar weight, or melt value per coin
+  const currentInUnit =
+    spot == null ? null : !metal ? spot : metalForm === "bar" ? fromPricePerOunce(spot, unit) * purity : Number.isFinite(fineOzPerCoin) && fineOzPerCoin > 0 ? spot * fineOzPerCoin : null;
+  const avgInUnit = pos ? (metal ? fromPricePerOunce(pos.avgCost, "g") : pos.avgCost) : 0;
+  const costOfSold = pos ? (metal ? pos.avgCost * fineOz : pos.avgCost * qty) : 0;
+  const sellingTooMuch = valid && (metal ? fineOz > owned + 1e-9 : qty > owned + 1e-9);
+  const pureGramsLabel = metal && Number.isFinite(fineOz) && fineOz > 0 ? `${fmtShares(Math.round(fineOz * GRAMS_PER_TROY_OUNCE * 1000) / 1000)} g pure ${METALS[picked!.ticker as keyof typeof METALS].name.toLowerCase()}` : null;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -173,9 +246,22 @@ export function TransactionModal({
     // No date picked: record the trade on today's date (the user's own calendar day)
     if (!String(fd.get("tradeDate") ?? "").trim()) fd.set("tradeDate", todayLocal());
     if (metal && type !== "dividend") {
-      // store metals in troy ounces and price per troy ounce
-      if (Number.isFinite(qty)) fd.set("shares", String(toOunces(qty, unit)));
-      if (Number.isFinite(px)) fd.set("price", String(toPricePerOunce(px, unit)));
+      // store metals as PURE troy ounces and price per pure troy ounce (melt value basis)
+      if (Number.isFinite(fineOz) && fineOz > 0) {
+        fd.set("shares", String(fineOz));
+        if (Number.isFinite(px)) fd.set("price", String((qty * px) / fineOz));
+      }
+      fd.set("metalForm", metalForm);
+      if (metalForm === "bar") fd.set("purity", String(purity));
+      if (metalForm === "coin") {
+        fd.set("coinCode", coinCode);
+        fd.set("coinCount", form.shares);
+      }
+      if (metalForm === "custom") {
+        fd.set("coinCount", form.shares);
+        fd.set("coinGrams", coinGrams);
+        fd.set("purity", Number.isFinite(customP) ? String(customP) : "");
+      }
     }
     const res = editing ? await updateTransaction(editing.id, fd) : await createTransaction(fd);
     setSaving(false);
@@ -212,7 +298,7 @@ export function TransactionModal({
           <div className="flex items-start justify-between gap-3 rounded-xl border border-line bg-brand-soft/50 px-4 py-3">
             <div className="min-w-0">
               <p className="font-semibold">{metal ? picked.name : picked.ticker}</p>
-              <p className="truncate text-sm text-muted">{metal ? "Precious metal, priced per troy ounce" : picked.name}</p>
+              <p className="truncate text-sm text-muted">{metal ? "Valued at melt value: pure metal × live price" : picked.name}</p>
               {(picked.exchange || picked.sector) && (
                 <p className="mt-0.5 text-xs text-muted">{[picked.exchange, picked.sector, picked.currency].filter(Boolean).join(" · ")}</p>
               )}
@@ -220,10 +306,10 @@ export function TransactionModal({
             <div className="shrink-0 text-right">
               {currentInUnit != null && (
                 <>
-                  <p className="text-xs text-muted">Current Price</p>
+                  <p className="text-xs text-muted">{isCoinForm ? "Melt Value" : "Current Price"}</p>
                   <p className="font-semibold tabular">
                     {fmtPrice(currentInUnit, ccy)}
-                    {metal && <span className="text-xs font-normal text-muted"> / {unit}</span>}
+                    {metal && <span className="text-xs font-normal text-muted"> / {isCoinForm ? "coin" : unitShort}</span>}
                   </p>
                 </>
               )}
@@ -254,33 +340,82 @@ export function TransactionModal({
           </div>
 
           {metal && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Weight Unit</span>
-              <SegmentedToggle
-                label="Weight Unit"
-                value={unit}
-                onChange={setUnit}
-                options={[
-                  { value: "oz", label: "Troy Oz" },
-                  { value: "g", label: "Grams" },
-                ]}
-              />
+            <div role="radiogroup" aria-label="How is it held?" className="grid grid-cols-3 gap-1 rounded-lg bg-surface p-1">
+              {METAL_FORMS.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={metalForm === f.value}
+                  onClick={() => {
+                    if (f.value === metalForm) return;
+                    // amount and price mean different things per form (weight vs. coins), so start fresh
+                    setMetalForm(f.value);
+                    setForm((s) => ({ ...s, shares: "", price: "" }));
+                    setError(null);
+                  }}
+                  className={`rounded-md py-1.5 text-xs font-medium transition-colors ${metalForm === f.value ? "bg-white text-brand shadow-sm" : "text-muted hover:text-brand"}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {metal && metalForm === "bar" && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex items-center justify-between gap-2 sm:col-span-2">
+                <span className="text-sm text-muted">Weight Unit</span>
+                <SegmentedToggle label="Weight Unit" value={unit} onChange={setUnit} options={WEIGHT_UNITS.map((u) => ({ value: u.value, label: u.label }))} />
+              </div>
+              <Field label="Purity" htmlFor="purity">
+                <Select id="purity" value={String(purity)} onChange={(e) => setPurity(Number(e.target.value))}>
+                  {PURITIES[metalKey].map((p) => (
+                    <option key={p.value} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+          )}
+
+          {metal && metalForm === "coin" && (
+            <Field label="Coin" htmlFor="coinCode" hint={coin ? `${coin.grossGrams} g each · ${fmtShares(Math.round(coin.fineOz * GRAMS_PER_TROY_OUNCE * 1000) / 1000)} g pure` : undefined}>
+              <Select id="coinCode" value={coinCode} onChange={(e) => setCoinCode(e.target.value)} aria-invalid={error?.field === "coinCode"}>
+                {coinsFor(metalKey).map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+
+          {metal && metalForm === "custom" && (
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Weight Per Coin (Grams)" htmlFor="coinGrams">
+                <Input id="coinGrams" type="number" inputMode="decimal" min="0" step="any" value={coinGrams} onChange={(e) => setCoinGrams(e.target.value)} aria-invalid={error?.field === "coinGrams"} />
+              </Field>
+              <Field label="Purity (%)" htmlFor="customPurity" hint="e.g. 91.67 for 22k, 90 for 900 fine.">
+                <Input id="customPurity" type="number" inputMode="decimal" min="1" max="100" step="any" value={customPurity} onChange={(e) => setCustomPurity(e.target.value)} aria-invalid={error?.field === "purity"} />
+              </Field>
             </div>
           )}
 
           {type === "sell" && (
             <p className="text-sm text-muted">
-              You own <span className="font-medium text-foreground">{fmtShares(Math.round(Math.max(ownedInUnit, 0) * 1e4) / 1e4)}</span> {metal ? (unit === "oz" ? "oz" : "g") : "shares"}
-              {pos && pos.shares > 0 && <> at an average cost of {fmtPrice(avgInUnit, ccy)}{metal ? ` / ${unit}` : ""}</>}.
+              You own <span className="font-medium text-foreground">{ownedLabel}</span>
+              {pos && pos.shares > 0 && <> at an average cost of {fmtPrice(avgInUnit, ccy)}{metal ? " / g pure" : ""}</>}.
             </p>
           )}
 
           {type !== "dividend" ? (
             <div className="grid grid-cols-2 gap-3">
-              <Field label={metal ? `Weight (${unit === "oz" ? "Troy Oz" : "Grams"})` : "Number Of Shares"} htmlFor="shares">
-                <Input id="shares" name="shares" type="number" inputMode="decimal" min="0" step="any" value={form.shares} onChange={set("shares")} aria-invalid={error?.field === "shares"} required />
+              <Field label={!metal ? "Number Of Shares" : isCoinForm ? "Number Of Coins" : `Weight (${unitLabel})`} htmlFor="shares" hint={pureGramsLabel ? `= ${pureGramsLabel}` : undefined}>
+                <Input id="shares" name="shares" type="number" inputMode={isCoinForm ? "numeric" : "decimal"} min="0" step={isCoinForm ? "1" : "any"} value={form.shares} onChange={set("shares")} aria-invalid={error?.field === "shares"} required />
               </Field>
-              <Field label={metal ? `Price Per ${unitWord} (${ccy})` : `Price Per Share (${ccy})`} htmlFor="price">
+              <Field label={!metal ? `Price Per Share (${ccy})` : isCoinForm ? `Price Per Coin (${ccy})` : `Price Per ${unitWord} (${ccy})`} htmlFor="price">
                 <Input
                   id="price"
                   name="price"
@@ -303,7 +438,7 @@ export function TransactionModal({
           )}
           {type !== "dividend" && currentInUnit != null && form.price === "" && (
             <button type="button" onClick={() => setForm((f) => ({ ...f, price: String(Math.round(currentInUnit * 100) / 100) }))} className="-mt-2 text-xs font-medium text-brand hover:underline">
-              Use Current Price ({fmtPrice(currentInUnit, ccy)}{metal ? ` / ${unit}` : ""})
+              {isCoinForm ? "Use Melt Value" : "Use Current Price"} ({fmtPrice(currentInUnit, ccy)}{metal ? ` / ${isCoinForm ? "coin" : unitShort}` : ""})
             </button>
           )}
 
@@ -340,11 +475,11 @@ export function TransactionModal({
                 {pos && pos.shares > 0 && (
                   <Row
                     label="Realized Profit / Loss"
-                    value={valid ? money((px - avgInUnit) * qty - fee, ccy, { sign: true }) : "—"}
-                    className={valid ? gainClass((px - avgInUnit) * qty - fee) : ""}
+                    value={valid ? money(qty * px - costOfSold - fee, ccy, { sign: true }) : "—"}
+                    className={valid ? gainClass(qty * px - costOfSold - fee) : ""}
                   />
                 )}
-                {valid && qty > ownedInUnit + 1e-9 && <p className="mt-2 text-loss">{metal ? "You can't sell more metal than you own." : messages.oversell}</p>}
+                {sellingTooMuch && <p className="mt-2 text-loss">{metal ? "You can't sell more metal than you own." : messages.oversell}</p>}
               </>
             )}
             {type === "dividend" && <Row label="Added To Cash" value={form.amount ? money(Number(form.amount) - (Number.isFinite(fee) ? fee : 0), ccy) : "—"} />}

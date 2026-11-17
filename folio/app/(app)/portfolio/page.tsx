@@ -15,7 +15,7 @@ import { SectorTable } from "@/components/SectorTable";
 import { CashCard } from "@/components/CashCard";
 import { MetalsTable } from "@/components/MetalsTable";
 import { AssetMix } from "@/components/AssetMix";
-import { METALS_SECTOR } from "@/lib/metals";
+import { METALS_SECTOR, coinHoldings } from "@/lib/metals";
 import { Alert } from "@/components/ui";
 
 export const metadata = { title: "Portfolio · Folio" };
@@ -30,7 +30,8 @@ export default function PortfolioPage() {
 
 async function PortfolioContent() {
   const supabase = await createClient();
-  const { ledger, valuation: v, notice, asOf, cash, showShariah, portfolioId } = await loadValuation(supabase);
+  const { ledger, valuation: v, notice, asOf, cash, showShariah, portfolioId, txns } = await loadValuation(supabase);
+  const coins = coinHoldings(txns);
   const positions = toPositionSummary(ledger);
   after(() => refreshPublicSnapshotIfStale(supabase, portfolioId).catch(() => undefined));
   const hasAnything = v.holdings.length > 0 || v.cashValue > 0;
@@ -95,7 +96,7 @@ async function PortfolioContent() {
           ) : (
             <EmptyState title="No stocks yet.">Add a buy to see your holdings here.</EmptyState>
           )}
-          {metals.length > 0 && <MetalsTable metals={metals} base={v.base} />}
+          {metals.length > 0 && <MetalsTable metals={metals} base={v.base} coins={coins} />}
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <SectorTable sectors={v.sectors} base={v.base} />

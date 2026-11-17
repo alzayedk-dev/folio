@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { refreshPublicSnapshot } from "@/lib/publicSnapshot";
 import { createClient } from "@/lib/supabase/server";
-import { transactionSchema } from "@/lib/validation";
+import { transactionSchema, type TransactionInput } from "@/lib/validation";
 import { replayLedger, type Txn } from "@/lib/portfolio";
 import { rowToTxn } from "@/lib/loadPortfolio";
 import { messages } from "@/lib/messages";
-import { isMetal } from "@/lib/metals";
+import { customFineOz, findCoin, isMetal, METALS } from "@/lib/metals";
+import { txnMessages } from "@/lib/validation";
 import { getCurrentPortfolio } from "@/lib/currentPortfolio";
 import { portfolioMessages } from "@/lib/portfolios";
 
@@ -43,6 +44,28 @@ async function oversellMessage(
   return isMetal(ticker) ? "You can't sell more metal than you own." : messages.oversell;
 }
 
+/**
+ * Gold/silver details: works out the pure troy ounces for coins (so the stored weight always matches the coin)
+ * and returns the columns to save. Stocks get empty details.
+ */
+function metalDetails(v: TransactionInput): { error?: ActionResult; shares?: number | null; price?: number | null; cols: Record<string, unknown> } {
+  const empty = { metal_form: null, coin_code: null, coin_count: null, coin_grams: null, purity: null };
+  if (!isMetal(v.ticker) || v.type === "dividend" || !v.metalForm) return { cols: empty };
+  const metalKey = METALS[v.ticker].key;
+  const paid = (v.shares ?? 0) * (v.price ?? 0); // client sent pure oz × price per pure oz
+  if (v.metalForm === "coin") {
+    const coin = findCoin(v.coinCode);
+    if (!coin || coin.metal !== metalKey) return { error: { ok: false, error: txnMessages.coin, field: "coinCode" }, cols: empty };
+    const fine = v.coinCount! * coin.fineOz;
+    return { shares: fine, price: fine > 0 ? paid / fine : v.price, cols: { metal_form: "coin", coin_code: coin.code, coin_count: v.coinCount, coin_grams: null, purity: coin.purity } };
+  }
+  if (v.metalForm === "custom") {
+    const fine = customFineOz(v.coinCount!, v.coinGrams!, v.purity!);
+    return { shares: fine, price: fine > 0 ? paid / fine : v.price, cols: { metal_form: "custom", coin_code: null, coin_count: v.coinCount, coin_grams: v.coinGrams, purity: v.purity } };
+  }
+  return { shares: v.shares, price: v.price, cols: { metal_form: "bar", coin_code: null, coin_count: null, coin_grams: null, purity: v.purity } };
+}
+
 function parse(formData: FormData) {
   const parsed = transactionSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -65,12 +88,17 @@ export async function createTransaction(formData: FormData): Promise<ActionResul
   const { data: sym } = await supabase.from("symbols").select("ticker, currency").eq("ticker", v.ticker).maybeSingle();
   if (!sym) return { ok: false, error: messages.unknownTicker, field: "ticker" };
 
+  const md = metalDetails(v);
+  if (md.error) return md.error;
+  if (md.shares !== undefined) v.shares = md.shares;
+  if (md.price !== undefined) v.price = md.price;
   const row = {
     portfolio_id: portfolio.id,
     ticker: v.ticker,
     type: v.type,
     shares: v.type === "dividend" ? null : v.shares,
     price: v.type === "dividend" ? null : v.price,
+    ...md.cols,
     amount: v.type === "dividend" ? v.amount : null,
     fees: v.fees,
     currency: sym.currency,
@@ -100,6 +128,10 @@ export async function updateTransaction(id: string, formData: FormData): Promise
   const { data: existing } = await supabase.from("transactions").select("*").eq("id", id).maybeSingle();
   if (!existing) return { ok: false, error: "That trade isn't on your books anymore." };
   if (existing.ticker !== v.ticker) return { ok: false, error: "To change the stock, delete this trade and add a new one.", field: "ticker" };
+  const md = metalDetails(v);
+  if (md.error) return md.error;
+  if (md.shares !== undefined) v.shares = md.shares;
+  if (md.price !== undefined) v.price = md.price;
 
   const updated: Txn = { ...rowToTxn(existing), type: v.type, shares: v.type === "dividend" ? null : v.shares, price: v.type === "dividend" ? null : v.price, amount: v.type === "dividend" ? v.amount : null, fees: v.fees, tradeDate: v.tradeDate };
   const problem = await oversellMessage(supabase, existing.portfolio_id, v.ticker, (txns) => txns.map((t) => (t.id === id ? updated : t)));
@@ -107,7 +139,7 @@ export async function updateTransaction(id: string, formData: FormData): Promise
 
   const { error } = await supabase
     .from("transactions")
-    .update({ type: updated.type, shares: updated.shares, price: updated.price, amount: updated.amount, fees: updated.fees, trade_date: updated.tradeDate, notes: v.notes || null })
+    .update({ type: updated.type, shares: updated.shares, price: updated.price, amount: updated.amount, fees: updated.fees, trade_date: updated.tradeDate, notes: v.notes || null, ...md.cols })
     .eq("id", id);
   if (error) return { ok: false, error: messages.generic };
   refresh(supabase, existing.portfolio_id);

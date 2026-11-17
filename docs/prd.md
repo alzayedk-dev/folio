@@ -243,6 +243,15 @@ Opens when a ticker is clicked.
 - **AI analyst:** knows which portfolio the user is viewing and answers about that one, Real or Paper.
 - **Deleting:** the user has to type the portfolio's name to confirm. Its trades and cash are removed for good. The last remaining portfolio can't be deleted.
 
+### 3.17 Gold And Silver: Bars And Coins (Melt Value)
+- Every gold or silver holding is counted as **pure metal** and valued at **melt value**: pure weight × the live COMEX price. Dealer premiums aren't included, so if you paid above melt, that shows as a small loss until the price rises.
+- When adding gold or silver, choose how it's held:
+  - **Bar / Pure:** weight in **troy oz, grams or tola** (1 tola = 11.66 g) plus purity (gold 24k, 22k, 21k, 18k; silver Fine 999 or Sterling 925).
+  - **Coin:** pick from a list, enter how many and the price per coin. Pure content fills in automatically. The list covers Turkish/Ottoman lira (Full Ata/Cumhuriyet, Rashadi/Reşat, Half, Quarter/Çeyrek, Gremse), English Lira (Sovereign) and Half Sovereign, Saudi Guinea, and 1 oz bullion coins (Krugerrand, American Eagle, Maple Leaf, Britannia, gold and silver).
+  - **Custom Coin:** any other coin. Enter the weight per coin in grams and its purity %.
+- The metals table shows the **pure weight** and lists coins still held under the metal, for example "3 × Turkish Quarter Lira (Çeyrek)". The trades list shows coin trades as "4 × Coin" at a price per coin.
+- No jewelry.
+
 ### 3.12 About and Contact pages
 - **About page:** explains what Folio is for, who it helps, what it does and doesn't do (monitors, never trades or advises), and where the data comes from.
 - **Contact page:** Khaled Alzayed with the contact email (alzayed.k@yahoo.com, shown as a clickable email link).

@@ -585,3 +585,13 @@ begin
   return new;
 end; $$;
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
+-- ---------------------------------------------------------------
+-- Gold/silver coin details (17 Nov): display only; shares stay pure troy oz, price per pure oz (melt value)
+-- ---------------------------------------------------------------
+alter table public.transactions
+  add column if not exists metal_form text check (metal_form in ('bar', 'coin', 'custom')),
+  add column if not exists coin_code text check (coin_code is null or coin_code ~ '^[a-z_]{2,30}$'),
+  add column if not exists coin_count numeric(12, 2) check (coin_count is null or coin_count > 0),
+  add column if not exists coin_grams numeric(12, 4) check (coin_grams is null or coin_grams > 0),
+  add column if not exists purity numeric(6, 5) check (purity is null or (purity > 0 and purity <= 1));

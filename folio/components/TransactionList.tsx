@@ -7,7 +7,7 @@ import { deleteTransaction } from "@/app/(app)/actions/transactions";
 import { gainClass, money, price as fmtPrice, shares as fmtShares } from "@/lib/format";
 import { TransactionModal, type EditableTxn, type PositionSummary } from "./TransactionModal";
 import { Alert, Select } from "./ui";
-import { isMetal } from "@/lib/metals";
+import { customCoinLabel, findCoin, isMetal } from "@/lib/metals";
 
 export type TxnRow = EditableTxn & { proceeds: number | null; realizedPL: number | null; total: number };
 
@@ -61,8 +61,19 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
     router.refresh();
   }
 
-  const qtyCell = (r: TxnRow) => (r.type === "dividend" ? "—" : `${fmtShares(Math.round((r.shares ?? 0) * 1e4) / 1e4)}${isMetal(r.ticker) ? " oz" : ""}`);
-  const priceCell = (r: TxnRow) => (r.type === "dividend" ? "—" : `${fmtPrice(r.price, r.currency)}${isMetal(r.ticker) ? " / oz" : ""}`);
+  const coinLabel = (r: TxnRow) =>
+    r.metalForm === "coin" ? findCoin(r.coinCode)?.name ?? "Coin" : r.metalForm === "custom" && r.coinGrams && r.purity ? customCoinLabel(r.coinGrams, r.purity) : null;
+  const qtyCell = (r: TxnRow) => {
+    if (r.type === "dividend") return "—";
+    const label = isMetal(r.ticker) ? coinLabel(r) : null;
+    if (label && r.coinCount) return `${fmtShares(r.coinCount)} × ${label}`;
+    return `${fmtShares(Math.round((r.shares ?? 0) * 1e4) / 1e4)}${isMetal(r.ticker) ? " oz pure" : ""}`;
+  };
+  const priceCell = (r: TxnRow) => {
+    if (r.type === "dividend") return "—";
+    if (isMetal(r.ticker) && coinLabel(r) && r.coinCount) return `${fmtPrice(((r.shares ?? 0) * (r.price ?? 0)) / r.coinCount, r.currency)} / coin`;
+    return `${fmtPrice(r.price, r.currency)}${isMetal(r.ticker) ? " / oz" : ""}`;
+  };
 
   return (
     <section className="space-y-4">

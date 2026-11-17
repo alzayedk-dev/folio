@@ -2,26 +2,23 @@
 
 import Link from "next/link";
 import type { HoldingRow } from "@/lib/portfolio";
-import { fromOunces, fromPricePerOunce, type WeightUnit } from "@/lib/metals";
+import { WEIGHT_UNITS, fromOunces, fromPricePerOunce, type WeightUnit } from "@/lib/metals";
 import { gainClass, money, pct, price as fmtPrice, shares as fmtShares } from "@/lib/format";
 import { SegmentedToggle } from "./SegmentedToggle";
 import { usePersistentState } from "./usePersistentState";
 import { InfoTip } from "./InfoTip";
 
-const UNITS = [
-  { value: "oz", label: "Troy Oz" },
-  { value: "g", label: "Grams" },
-] as const;
+const UNITS = WEIGHT_UNITS.map((u) => ({ value: u.value, label: u.label }));
 const PL = [
   { value: "usd", label: "$" },
   { value: "pct", label: "%" },
 ] as const;
 
-/** Gold / silver positions. Quantities are stored in troy ounces; the viewer picks oz or grams. */
-export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: string }) {
-  const [unit, setUnit] = usePersistentState<WeightUnit>("folio.metalUnit", "oz", ["oz", "g"]);
+/** Gold / silver positions: pure metal weight (coins converted to their pure content), valued at melt value. */
+export function MetalsTable({ metals, base, coins = {} }: { metals: HoldingRow[]; base: string; coins?: Record<string, { label: string; count: number }[]> }) {
+  const [unit, setUnit] = usePersistentState<WeightUnit>("folio.metalUnit", "oz", ["oz", "g", "tola"]);
   const [mode, setMode] = usePersistentState<"usd" | "pct">("folio.plMode", "usd", ["usd", "pct"]);
-  const per = unit === "oz" ? "oz" : "g";
+  const per = WEIGHT_UNITS.find((u) => u.value === unit)?.short ?? "oz";
   const total = metals.reduce((a, m) => a + m.value, 0);
   const totalWeight = metals.reduce((a, m) => a + m.weight, 0);
   const totalPL = metals.reduce((a, m) => a + m.unrealizedPL, 0);
@@ -42,11 +39,11 @@ export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: stri
           <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
             <tr>
               <th scope="col" className="sticky left-0 z-[1] bg-surface px-3 py-3 text-left font-medium shadow-[1px_0_0_var(--border)]">Metal</th>
-              <th scope="col" className="px-3 py-3 text-right font-medium">Weight</th>
+              <th scope="col" className="px-3 py-3 text-right font-medium">Pure Weight</th>
               <th scope="col" className="px-3 py-3 text-right font-medium">
                 Buy Price{" "}
                 <span className="ml-1">
-                  <InfoTip text={`Average price you paid per ${unit === "oz" ? "troy ounce" : "gram"}, including fees.`} label="What Buy Price means" />
+                  <InfoTip text={`Average price you paid per ${unit === "oz" ? "troy ounce" : unit === "g" ? "gram" : "tola"} of pure metal, including fees and any coin premium.`} label="What Buy Price means" />
                 </span>
               </th>
               <th scope="col" className="px-3 py-3 text-right font-medium">Current Price</th>
@@ -62,7 +59,10 @@ export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: stri
                   <Link href={`/stock/${encodeURIComponent(m.ticker)}`} className="block py-0.5 font-semibold hover:text-brand hover:underline">
                     {m.name}
                   </Link>
-                  <span className="block text-xs text-muted">COMEX price{m.priceMissing || m.stale ? " (delayed)" : ""}</span>
+                  {coins[m.ticker]?.length ? (
+                    <span className="block max-w-[16rem] text-xs text-muted">{coins[m.ticker].map((c) => `${c.count} × ${c.label}`).join(" · ")}</span>
+                  ) : null}
+                  <span className="block text-xs text-muted">Melt value, COMEX price{m.priceMissing || m.stale ? " (delayed)" : ""}</span>
                 </td>
                 <td className="px-3 py-3 text-right">{fmtShares(Math.round(fromOunces(m.shares, unit) * 1e4) / 1e4)} {per}</td>
                 <td className="px-3 py-3 text-right">{fmtPrice(fromPricePerOunce(m.avgCost, unit), m.currency)} <span className="text-xs text-muted">/ {per}</span></td>

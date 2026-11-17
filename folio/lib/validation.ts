@@ -25,6 +25,10 @@ export const txnMessages = {
   fees: "Fees can't be negative.",
   date: "Pick a trade date that isn't in the future.",
   notes: "Notes can be up to 500 characters.",
+  coins: "Enter how many coins (a whole number, 1 or more).",
+  coinGrams: "Enter the weight of one coin in grams (more than 0).",
+  purity: "Enter a purity between 1% and 100%.",
+  coin: "Pick a coin from the list.",
 } as const;
 
 /** Latest date allowed: today, plus one day of slack for time zones ahead of the server. */
@@ -45,9 +49,20 @@ export const transactionSchema = z
     // Optional: empty means "today"
     tradeDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, txnMessages.date)]).optional().default(""),
     notes: z.string().trim().max(500, txnMessages.notes).optional().default(""),
+    // Gold/silver only: how the metal was entered
+    metalForm: z.union([z.literal(""), z.enum(["bar", "coin", "custom"])]).optional().default(""),
+    coinCode: z.union([z.literal(""), z.string().regex(/^[a-z_]{2,30}$/)]).optional().default(""),
+    coinCount: z.union([z.literal(""), z.null(), num(txnMessages.coins)]).optional(),
+    coinGrams: z.union([z.literal(""), z.null(), num(txnMessages.coinGrams)]).optional(),
+    purity: z.union([z.literal(""), z.null(), num(txnMessages.purity)]).optional(),
   })
   .transform((v) => ({
     ...v,
+    metalForm: v.metalForm === "" ? null : v.metalForm,
+    coinCode: v.coinCode === "" ? null : v.coinCode,
+    coinCount: v.coinCount === "" || v.coinCount == null ? null : Number(v.coinCount),
+    coinGrams: v.coinGrams === "" || v.coinGrams == null ? null : Number(v.coinGrams),
+    purity: v.purity === "" || v.purity == null ? null : Number(v.purity),
     tradeDate: v.tradeDate || new Date().toISOString().slice(0, 10),
     shares: v.shares === "" || v.shares == null ? null : Number(v.shares),
     price: v.price === "" || v.price == null ? null : Number(v.price),
@@ -57,6 +72,12 @@ export const transactionSchema = z
   .superRefine((v, ctx) => {
     if (v.tradeDate > latestTradeDate() || v.tradeDate < "1970-01-01") ctx.addIssue({ code: "custom", message: txnMessages.date, path: ["tradeDate"] });
     if (v.fees < 0 || v.fees > 1e9) ctx.addIssue({ code: "custom", message: txnMessages.fees, path: ["fees"] });
+    if (v.metalForm === "coin" || v.metalForm === "custom") {
+      if (v.coinCount == null || !Number.isInteger(v.coinCount) || v.coinCount < 1 || v.coinCount > 1e6) ctx.addIssue({ code: "custom", message: txnMessages.coins, path: ["shares"] });
+    }
+    if (v.metalForm === "coin" && !v.coinCode) ctx.addIssue({ code: "custom", message: txnMessages.coin, path: ["coinCode"] });
+    if (v.metalForm === "custom" && (v.coinGrams == null || !(v.coinGrams > 0) || v.coinGrams > 10000)) ctx.addIssue({ code: "custom", message: txnMessages.coinGrams, path: ["coinGrams"] });
+    if ((v.metalForm === "custom" || v.metalForm === "bar") && (v.purity == null || !(v.purity >= 0.01) || v.purity > 1)) ctx.addIssue({ code: "custom", message: txnMessages.purity, path: ["purity"] });
     if (v.type === "dividend") {
       if (v.amount == null || !(v.amount > 0) || v.amount > 1e12) ctx.addIssue({ code: "custom", message: txnMessages.amount, path: ["amount"] });
     } else {
