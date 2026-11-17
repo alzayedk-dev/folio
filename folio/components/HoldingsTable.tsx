@@ -15,7 +15,7 @@ import { messages } from "@/lib/messages";
 import { SHARIAH_NOTE } from "@/lib/shariah";
 
 type Mode = "usd" | "pct";
-type SortKey = "ticker" | "shares" | "avgCost" | "price" | "dayChange" | "value" | "weight" | "sector" | "pl";
+type SortKey = "ticker" | "shares" | "avgCost" | "price" | "value" | "weight" | "sector" | "pl";
 
 const MODES = [
   { value: "usd", label: "$" },
@@ -55,7 +55,6 @@ export function HoldingsTable({
   cashValue,
   metalsValue = 0,
   totalValue,
-  dayChange,
   unrealizedPL,
   showShariah = false,
 }: {
@@ -64,7 +63,6 @@ export function HoldingsTable({
   cashValue: number;
   metalsValue?: number;
   totalValue: number;
-  dayChange: number;
   unrealizedPL: number;
   showShariah?: boolean;
 }) {
@@ -80,8 +78,6 @@ export function HoldingsTable({
           return h.ticker;
         case "sector":
           return h.sector;
-        case "dayChange":
-          return mode === "usd" ? h.dayChange : h.dayChangePct ?? -Infinity;
         case "pl":
           return mode === "usd" ? h.unrealizedPL : h.unrealizedPLPct ?? -Infinity;
         default:
@@ -99,8 +95,6 @@ export function HoldingsTable({
 
   const plCell = (h: HoldingRow) =>
     mode === "usd" ? money(h.unrealizedPL, base, { sign: true }) : pct(h.unrealizedPLPct, { sign: true });
-  const dayCell = (h: HoldingRow) =>
-    mode === "usd" ? money(h.dayChange, base, { sign: true }) : pct(h.dayChangePct, { sign: true, digits: 2 });
 
 
   return (
@@ -110,21 +104,20 @@ export function HoldingsTable({
           Stocks <span className="font-normal text-muted">({holdings.length})</span>
         </h2>
         <div className="flex items-center gap-2 text-xs text-muted">
-          <span>Show P/L &amp; Day Change In</span>
+          <span>Show Profit / Loss In</span>
           <SegmentedToggle label="Show P/L in dollars or percent" value={mode} options={MODES} onChange={setMode} />
         </div>
       </div>
 
       {/* Table at every width; scrolls sideways inside the box on small screens */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[66rem] text-sm">
+        <table className="w-full min-w-[60rem] text-sm">
           <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
             <tr>
               <SortHeader k="ticker" align="left" sticky sort={sort} onSort={toggleSort}>Stock</SortHeader>
               <SortHeader k="shares" sort={sort} onSort={toggleSort}>Shares</SortHeader>
               <SortHeader k="avgCost" sort={sort} onSort={toggleSort} info="Average price you paid per share, including fees.">Buy Price</SortHeader>
               <SortHeader k="price" sort={sort} onSort={toggleSort}>Current Price</SortHeader>
-              <SortHeader k="dayChange" sort={sort} onSort={toggleSort}>Day Change</SortHeader>
               <SortHeader k="value" sort={sort} onSort={toggleSort}>Total Value</SortHeader>
               <SortHeader k="weight" sort={sort} onSort={toggleSort}>% Of Portfolio</SortHeader>
               <SortHeader k="sector" align="left" sort={sort} onSort={toggleSort}>Sector</SortHeader>
@@ -157,7 +150,6 @@ export function HoldingsTable({
                   {fmtPrice(h.price, h.currency)}
                   <PriceNote h={h} />
                 </td>
-                <td className={`px-3 py-3 text-right ${gainClass(h.dayChange)}`}>{dayCell(h)}</td>
                 <td className="px-3 py-3 text-right font-medium">{money(h.value, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(h.weight)}</td>
                 <td className="px-3 py-3 text-left text-muted">{h.sector}</td>
@@ -183,7 +175,7 @@ export function HoldingsTable({
                 <td className="sticky left-0 z-[1] bg-white px-3 py-3 font-medium text-foreground shadow-[1px_0_0_var(--border)]">
                   <a href="#metals-heading" className="inline-block py-1 hover:text-brand">Precious Metals</a>
                 </td>
-                <td colSpan={4} />
+                <td colSpan={3} />
                 <td className="px-3 py-3 text-right font-medium text-foreground">{money(metalsValue, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(totalValue ? (metalsValue / totalValue) * 100 : 0)}</td>
                 <td colSpan={3 + extra} />
@@ -192,7 +184,7 @@ export function HoldingsTable({
             {cashValue > 0.005 && (
               <tr className="text-muted">
                 <td className="sticky left-0 z-[1] bg-white px-3 py-3 font-medium text-foreground shadow-[1px_0_0_var(--border)]">Cash</td>
-                <td colSpan={4} />
+                <td colSpan={3} />
                 <td className="px-3 py-3 text-right font-medium text-foreground">{money(cashValue, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(totalValue ? (cashValue / totalValue) * 100 : 0)}</td>
                 <td colSpan={3 + extra} />
@@ -203,7 +195,6 @@ export function HoldingsTable({
             <tr>
               <td className="sticky left-0 z-[1] bg-brand-soft px-3 py-3 shadow-[1px_0_0_var(--border)]">Total</td>
               <td colSpan={3} />
-              <td className={`px-3 py-3 text-right ${gainClass(dayChange)}`}>{mode === "usd" ? money(dayChange, base, { sign: true }) : ""}</td>
               <td className="px-3 py-3 text-right">{money(totalValue, base)}</td>
               <td className="px-3 py-3 text-right">{totalValue > 0 ? "100%" : "—"}</td>
               <td colSpan={1 + extra} />

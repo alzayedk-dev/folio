@@ -57,7 +57,7 @@ export function TransactionModal({
   const [picked, setPicked] = useState<Picked | null>(null);
   const [loadingInfo, setLoadingInfo] = useState(false);
   const [type, setType] = useState<"buy" | "sell" | "dividend">(initialType);
-  const [form, setForm] = useState({ shares: "", price: "", amount: "", fees: "", tradeDate: todayLocal(), notes: "" });
+  const [form, setForm] = useState({ shares: "", price: "", amount: "", fees: "", tradeDate: "", notes: "" });
   const [error, setError] = useState<{ message: string; field?: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [unit, setUnitState] = useState<WeightUnit>("oz");
@@ -114,7 +114,7 @@ export function TransactionModal({
     } else {
       setPicked(null);
       setType(initialType);
-      setForm({ shares: "", price: "", amount: "", fees: "", tradeDate: todayLocal(), notes: "" });
+      setForm({ shares: "", price: "", amount: "", fees: "", tradeDate: "", notes: "" });
       if (presetTicker) {
         if (isMetal(presetTicker)) void pickMetal(METALS[presetTicker].key);
         else void pick({ ticker: presetTicker, name: presetTicker, exchange: null, type: "EQUITY" });
@@ -170,6 +170,8 @@ export function TransactionModal({
     const fd = new FormData(e.currentTarget);
     fd.set("ticker", picked.ticker);
     fd.set("type", type);
+    // No date picked: record the trade on today's date (the user's own calendar day)
+    if (!String(fd.get("tradeDate") ?? "").trim()) fd.set("tradeDate", todayLocal());
     if (metal && type !== "dividend") {
       // store metals in troy ounces and price per troy ounce
       if (Number.isFinite(qty)) fd.set("shares", String(toOunces(qty, unit)));
@@ -306,8 +308,8 @@ export function TransactionModal({
           )}
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Trade Date" htmlFor="tradeDate">
-              <Input id="tradeDate" name="tradeDate" type="date" max={todayLocal()} value={form.tradeDate} onChange={set("tradeDate")} aria-invalid={error?.field === "tradeDate"} required />
+            <Field label="Trade Date (Optional)" htmlFor="tradeDate" hint="Leave empty to use today.">
+              <Input id="tradeDate" name="tradeDate" type="date" max={todayLocal()} value={form.tradeDate} onChange={set("tradeDate")} aria-invalid={error?.field === "tradeDate"} />
             </Field>
             <Field label={`Fees (${ccy})`} htmlFor="fees">
               <Input id="fees" name="fees" type="number" inputMode="decimal" min="0" step="any" placeholder="0" value={form.fees} onChange={set("fees")} aria-invalid={error?.field === "fees"} />

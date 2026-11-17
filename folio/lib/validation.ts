@@ -42,11 +42,13 @@ export const transactionSchema = z
     price: z.union([z.literal(""), z.null(), num(txnMessages.price)]).optional(),
     amount: z.union([z.literal(""), z.null(), num(txnMessages.amount)]).optional(),
     fees: z.union([z.literal(""), z.null(), num(txnMessages.fees)]).optional(),
-    tradeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, txnMessages.date),
+    // Optional: empty means "today"
+    tradeDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, txnMessages.date)]).optional().default(""),
     notes: z.string().trim().max(500, txnMessages.notes).optional().default(""),
   })
   .transform((v) => ({
     ...v,
+    tradeDate: v.tradeDate || new Date().toISOString().slice(0, 10),
     shares: v.shares === "" || v.shares == null ? null : Number(v.shares),
     price: v.price === "" || v.price == null ? null : Number(v.price),
     amount: v.amount === "" || v.amount == null ? null : Number(v.amount),

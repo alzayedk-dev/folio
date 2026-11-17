@@ -18,11 +18,16 @@ const SECTIONS = [
       "Live prices and your total portfolio value",
       "Profit and loss for your trades and your whole portfolio",
       "Holding and sector weights, with helpful warnings",
+      "Several portfolios, including Paper ones to practise with pretend money",
       "Performance tracking compared with the market",
       "News and earnings reminders for the companies you own",
       "An AI analyst for your market questions",
       "Public portfolios you can share and follow",
     ],
+  },
+  {
+    title: "Practise With Paper Portfolios",
+    body: "Want to test an idea before risking real money? Create a Paper portfolio with pretend cash, trade it like the real thing, and compare it with your real portfolios on the Performance tab. Paper portfolios are always clearly labelled, including when you share them.",
   },
   {
     title: "What Folio Doesn't Do",

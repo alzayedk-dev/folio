@@ -36,4 +36,11 @@ describe("transactionSchema", () => {
     expect(firstError({ ...base, ticker: "<script>" })).toBe(txnMessages.ticker);
     expect(firstError({ ...base, notes: "x".repeat(501) })).toBe(txnMessages.notes);
   });
+  it("uses today when no trade date is given", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    expect(transactionSchema.parse({ ...base, tradeDate: "" }).tradeDate).toBe(today);
+    const { tradeDate: _omit, ...noDate } = base;
+    void _omit;
+    expect(transactionSchema.parse(noDate).tradeDate).toBe(today);
+  });
 });

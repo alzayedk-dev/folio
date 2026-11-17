@@ -77,7 +77,7 @@ The user types a ticker or company name (for example "lly" or "Eli Lilly"). Sugg
 | Type | **Buy**, **Sell** or **Dividend** |
 | Number of shares | Required for Buy/Sell; must be more than 0 |
 | Price per share | Filled in manually, in the stock's own currency |
-| Trade date | Defaults to today; can be a past date, never a future one |
+| Trade date | Optional. Left empty, the trade is recorded on today's date. Can be a past date, never a future one. Performance starts from the earliest trade or cash date. |
 | Fees / commission | Optional, defaults to 0 |
 | Notes | Optional free text |
 
@@ -109,7 +109,6 @@ Total value · Cash · Today's change ($ and %) · Total unrealized P/L · Total
 | Shares | Total owned (all buys minus all sells) |
 | Avg. purchase price | Average cost per share, including fees |
 | Current price | Live (or the latest available) |
-| Day change | Today's move; follows the $/% toggle |
 | Total value | Shares × current price, converted to the base currency |
 | % of portfolio | This stock's value ÷ total portfolio value (cash included) |
 | Sector | One of 9 main sectors, or "Other" |

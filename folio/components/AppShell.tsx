@@ -9,7 +9,7 @@ import { NotificationBell } from "./NotificationBell";
 import { SiteFooter } from "./SiteFooter";
 import { PortfolioSwitcher } from "./PortfolioSwitcher";
 import type { Portfolio } from "@/lib/portfolios";
-import { IconAI, IconPerformance, IconPortfolio, IconPublic, IconReminders, IconTransactions } from "./icons";
+import { IconAI, IconHome, IconPerformance, IconPortfolio, IconPublic, IconReminders, IconTransactions } from "./icons";
 
 type Tab = { href: string; label: string; short: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
 
@@ -52,6 +52,10 @@ export function AppShell({
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
+            <Link href="/portfolio" aria-label="Home" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium text-muted hover:text-brand md:px-3">
+              <IconHome className="h-5 w-5 md:h-4 md:w-4" />
+              <span className="hidden md:inline">Home</span>
+            </Link>
             <Link href="/about" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted hover:text-brand md:inline-block">About</Link>
             <Link href="/contact" className="mr-1 hidden rounded-lg px-3 py-2 text-sm font-medium text-muted hover:text-brand md:inline-block">Contact</Link>
             <NotificationBell />

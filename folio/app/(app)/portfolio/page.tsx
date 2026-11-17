@@ -89,7 +89,6 @@ async function PortfolioContent() {
               base={v.base}
               cashValue={v.cashValue}
               totalValue={v.totalValue}
-              dayChange={v.dayChange}
               unrealizedPL={v.unrealizedPL}
               showShariah={showShariah}
             />

@@ -38,7 +38,7 @@ export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: stri
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[52rem] text-sm">
+        <table className="w-full min-w-[46rem] text-sm">
           <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
             <tr>
               <th scope="col" className="sticky left-0 z-[1] bg-surface px-3 py-3 text-left font-medium shadow-[1px_0_0_var(--border)]">Metal</th>
@@ -50,7 +50,6 @@ export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: stri
                 </span>
               </th>
               <th scope="col" className="px-3 py-3 text-right font-medium">Current Price</th>
-              <th scope="col" className="px-3 py-3 text-right font-medium">Day Change</th>
               <th scope="col" className="px-3 py-3 text-right font-medium">Total Value</th>
               <th scope="col" className="px-3 py-3 text-right font-medium">% Of Portfolio</th>
               <th scope="col" className="px-3 py-3 text-right font-medium">Profit / Loss</th>
@@ -68,9 +67,6 @@ export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: stri
                 <td className="px-3 py-3 text-right">{fmtShares(Math.round(fromOunces(m.shares, unit) * 1e4) / 1e4)} {per}</td>
                 <td className="px-3 py-3 text-right">{fmtPrice(fromPricePerOunce(m.avgCost, unit), m.currency)} <span className="text-xs text-muted">/ {per}</span></td>
                 <td className="px-3 py-3 text-right">{fmtPrice(fromPricePerOunce(m.price, unit), m.currency)} <span className="text-xs text-muted">/ {per}</span></td>
-                <td className={`px-3 py-3 text-right ${gainClass(m.dayChange)}`}>
-                  {mode === "usd" ? money(m.dayChange, base, { sign: true }) : pct(m.dayChangePct, { sign: true, digits: 2 })}
-                </td>
                 <td className="px-3 py-3 text-right font-medium">{money(m.value, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(m.weight)}</td>
                 <td className={`px-3 py-3 text-right font-medium ${gainClass(m.unrealizedPL)}`}>
@@ -83,7 +79,7 @@ export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: stri
             <tfoot className="border-t-2 border-brand/30 bg-brand-soft/40 font-semibold tabular">
               <tr>
                 <td className="sticky left-0 z-[1] bg-brand-soft px-3 py-3 shadow-[1px_0_0_var(--border)]">Total</td>
-                <td colSpan={4} />
+                <td colSpan={3} />
                 <td className="px-3 py-3 text-right">{money(total, base)}</td>
                 <td className="px-3 py-3 text-right">{pct(totalWeight)}</td>
                 <td className={`px-3 py-3 text-right ${gainClass(totalPL)}`}>{mode === "usd" ? money(totalPL, base, { sign: true }) : ""}</td>
