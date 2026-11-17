@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "./ui";
 import { TransactionModal, type PositionSummary } from "./TransactionModal";
 
-export function AddTransactionButton({ positions, label = "Add transaction" }: { positions: PositionSummary; label?: string }) {
+export function AddTransactionButton({ positions, label = "Add Transaction" }: { positions: PositionSummary; label?: string }) {
   const [open, setOpen] = useState(false);
   return (
     <>

@@ -15,7 +15,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       <p className="text-lg font-medium">{messages.generic}</p>
       <p className="mt-2 text-sm text-muted">{messages.serverBusy}</p>
       <Button className="mt-6" onClick={reset}>
-        Try again
+        Try Again
       </Button>
     </div>
   );

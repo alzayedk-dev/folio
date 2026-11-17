@@ -3,7 +3,7 @@ import type { Warning } from "@/lib/portfolio";
 const STYLES: Record<Exclude<Warning, "none">, { dot: string; text: string; label: string }> = {
   ok: { dot: "bg-gain", text: "text-gain", label: "OK" },
   yellow: { dot: "bg-amber-500", text: "text-warn", label: "High" },
-  red: { dot: "bg-loss", text: "text-loss", label: "Very high" },
+  red: { dot: "bg-loss", text: "text-loss", label: "Very High" },
 };
 
 /** Concentration warning used by the holdings and sector tables. */

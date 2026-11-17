@@ -129,7 +129,7 @@ export function TransactionModal({
     router.refresh();
   }
 
-  const title = editing ? "Edit transaction" : "Add transaction";
+  const title = editing ? "Edit Transaction" : "Add Transaction";
 
   return (
     <Modal open={open} onClose={onClose} title={title}>
@@ -154,13 +154,13 @@ export function TransactionModal({
             <div className="shrink-0 text-right">
               {picked.currentPrice != null && (
                 <>
-                  <p className="text-xs text-muted">Current price</p>
+                  <p className="text-xs text-muted">Current Price</p>
                   <p className="font-semibold tabular">{fmtPrice(picked.currentPrice, ccy)}</p>
                 </>
               )}
               {!editing && (
                 <button type="button" onClick={() => setPicked(null)} className="mt-1 text-xs font-medium text-brand hover:underline">
-                  Change stock
+                  Change Stock
                 </button>
               )}
             </div>
@@ -193,10 +193,10 @@ export function TransactionModal({
 
           {type !== "dividend" ? (
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Number of shares" htmlFor="shares">
+              <Field label="Number Of Shares" htmlFor="shares">
                 <Input id="shares" name="shares" type="number" inputMode="decimal" min="0" step="any" value={form.shares} onChange={set("shares")} aria-invalid={error?.field === "shares"} required />
               </Field>
-              <Field label={`Price per share (${ccy})`} htmlFor="price">
+              <Field label={`Price Per Share (${ccy})`} htmlFor="price">
                 <Input
                   id="price"
                   name="price"
@@ -213,18 +213,18 @@ export function TransactionModal({
               </Field>
             </div>
           ) : (
-            <Field label={`Dividend received (${ccy})`} htmlFor="amount" hint="The total amount paid to you.">
+            <Field label={`Dividend Received (${ccy})`} htmlFor="amount" hint="The total amount paid to you.">
               <Input id="amount" name="amount" type="number" inputMode="decimal" min="0" step="any" value={form.amount} onChange={set("amount")} aria-invalid={error?.field === "amount"} required />
             </Field>
           )}
           {type !== "dividend" && picked.currentPrice != null && form.price === "" && (
             <button type="button" onClick={() => setForm((f) => ({ ...f, price: String(picked.currentPrice) }))} className="-mt-2 text-xs font-medium text-brand hover:underline">
-              Use current price ({fmtPrice(picked.currentPrice, ccy)})
+              Use Current Price ({fmtPrice(picked.currentPrice, ccy)})
             </button>
           )}
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Trade date" htmlFor="tradeDate">
+            <Field label="Trade Date" htmlFor="tradeDate">
               <Input id="tradeDate" name="tradeDate" type="date" max={todayLocal()} value={form.tradeDate} onChange={set("tradeDate")} aria-invalid={error?.field === "tradeDate"} required />
             </Field>
             <Field label={`Fees (${ccy})`} htmlFor="fees">
@@ -232,7 +232,7 @@ export function TransactionModal({
             </Field>
           </div>
 
-          <Field label="Notes (optional)" htmlFor="notes">
+          <Field label="Notes (Optional)" htmlFor="notes">
             <textarea
               id="notes"
               name="notes"
@@ -248,14 +248,14 @@ export function TransactionModal({
           {/* Live preview */}
           <div className="rounded-xl bg-surface px-4 py-3 text-sm">
             {type === "buy" && (
-              <Row label="Total cost" value={valid ? money(qty * px + fee, ccy) : "—"} />
+              <Row label="Total Cost" value={valid ? money(qty * px + fee, ccy) : "—"} />
             )}
             {type === "sell" && (
               <>
-                <Row label="Proceeds (to cash)" value={valid ? money(qty * px - fee, ccy) : "—"} />
+                <Row label="Proceeds (To Cash)" value={valid ? money(qty * px - fee, ccy) : "—"} />
                 {pos && pos.shares > 0 && (
                   <Row
-                    label="Realized profit / loss"
+                    label="Realized Profit / Loss"
                     value={valid ? money((px - pos.avgCost) * qty - fee, ccy, { sign: true }) : "—"}
                     className={valid ? gainClass((px - pos.avgCost) * qty - fee) : ""}
                   />
@@ -263,7 +263,7 @@ export function TransactionModal({
                 {valid && qty > owned + 1e-9 && <p className="mt-2 text-loss">{messages.oversell}</p>}
               </>
             )}
-            {type === "dividend" && <Row label="Added to cash" value={form.amount ? money(Number(form.amount) - (Number.isFinite(fee) ? fee : 0), ccy) : "—"} />}
+            {type === "dividend" && <Row label="Added To Cash" value={form.amount ? money(Number(form.amount) - (Number.isFinite(fee) ? fee : 0), ccy) : "—"} />}
           </div>
 
           <div className="flex gap-3 pt-1">
@@ -271,7 +271,7 @@ export function TransactionModal({
               Cancel
             </Button>
             <Button type="submit" className="flex-1" disabled={saving}>
-              {saving ? messages.savingTrade : editing ? "Save changes" : `Save ${type}`}
+              {saving ? messages.savingTrade : editing ? "Save Changes" : `Save ${type[0].toUpperCase()}${type.slice(1)}`}
             </Button>
           </div>
         </form>

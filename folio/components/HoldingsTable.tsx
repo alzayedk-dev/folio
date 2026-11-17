@@ -7,6 +7,7 @@ import { gainClass, money, pct, price as fmtPrice, shares as fmtShares } from "@
 import { SegmentedToggle } from "./SegmentedToggle";
 import { usePersistentState } from "./usePersistentState";
 import { WarningBadge } from "./WarningBadge";
+import { InfoTip } from "./InfoTip";
 
 type Mode = "usd" | "pct";
 type SortKey = "ticker" | "shares" | "avgCost" | "price" | "dayChange" | "value" | "weight" | "sector" | "pl";
@@ -18,7 +19,7 @@ const MODES = [
 
 type Sort = { key: SortKey; dir: 1 | -1 };
 
-function SortHeader({ k, sort, onSort, children, align = "right", sticky = false }: { k: SortKey; sort: Sort; onSort: (k: SortKey) => void; children: React.ReactNode; align?: "left" | "right"; sticky?: boolean }) {
+function SortHeader({ k, sort, onSort, children, align = "right", sticky = false, info }: { k: SortKey; sort: Sort; onSort: (k: SortKey) => void; children: React.ReactNode; align?: "left" | "right"; sticky?: boolean; info?: string }) {
   const active = sort.key === k;
   return (
     <th scope="col" aria-sort={active ? (sort.dir === 1 ? "ascending" : "descending") : "none"} className={`px-3 py-3 font-medium ${align === "left" ? "text-left" : "text-right"} ${sticky ? "sticky left-0 z-[1] bg-surface shadow-[1px_0_0_var(--border)]" : ""}`}>
@@ -26,6 +27,11 @@ function SortHeader({ k, sort, onSort, children, align = "right", sticky = false
         {children}
         <span aria-hidden="true" className="text-[10px]">{active ? (sort.dir === 1 ? "▲" : "▼") : ""}</span>
       </button>
+      {info && (
+        <span className="ml-1">
+          <InfoTip text={info} label={`What ${typeof children === "string" ? children : "this column"} means`} />
+        </span>
+      )}
     </th>
   );
 }
@@ -93,7 +99,7 @@ export function HoldingsTable({
           Holdings <span className="font-normal text-muted">({holdings.length})</span>
         </h2>
         <div className="flex items-center gap-2 text-xs text-muted">
-          <span>P/L &amp; day change in</span>
+          <span>Show P/L &amp; Day Change In</span>
           <SegmentedToggle label="Show P/L in dollars or percent" value={mode} options={MODES} onChange={setMode} />
         </div>
       </div>
@@ -104,12 +110,12 @@ export function HoldingsTable({
           <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
             <tr>
               <SortHeader k="ticker" align="left" sticky sort={sort} onSort={toggleSort}>Stock</SortHeader>
-              <SortHeader k="shares" sort={sort} onSort={toggleSort}>Shares owned</SortHeader>
-              <SortHeader k="avgCost" sort={sort} onSort={toggleSort}>Avg. buy price</SortHeader>
-              <SortHeader k="price" sort={sort} onSort={toggleSort}>Current price</SortHeader>
-              <SortHeader k="dayChange" sort={sort} onSort={toggleSort}>Day change</SortHeader>
-              <SortHeader k="value" sort={sort} onSort={toggleSort}>Total value</SortHeader>
-              <SortHeader k="weight" sort={sort} onSort={toggleSort}>% of portfolio</SortHeader>
+              <SortHeader k="shares" sort={sort} onSort={toggleSort}>Shares</SortHeader>
+              <SortHeader k="avgCost" sort={sort} onSort={toggleSort} info="Average price you paid per share, including fees.">Buy Price</SortHeader>
+              <SortHeader k="price" sort={sort} onSort={toggleSort}>Current Price</SortHeader>
+              <SortHeader k="dayChange" sort={sort} onSort={toggleSort}>Day Change</SortHeader>
+              <SortHeader k="value" sort={sort} onSort={toggleSort}>Total Value</SortHeader>
+              <SortHeader k="weight" sort={sort} onSort={toggleSort}>% Of Portfolio</SortHeader>
               <SortHeader k="sector" align="left" sort={sort} onSort={toggleSort}>Sector</SortHeader>
               <SortHeader k="pl" sort={sort} onSort={toggleSort}>Profit / Loss</SortHeader>
               <th scope="col" className="px-3 py-3 text-left font-medium" title={WARNING_TITLE}>

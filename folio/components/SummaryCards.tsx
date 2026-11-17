@@ -17,7 +17,7 @@ export function SummaryCards({ v }: { v: Valuation }) {
   return (
     <section aria-label="Portfolio summary" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <div className="col-span-2 lg:col-span-1">
-        <StatCard label="Total value" value={money(v.totalValue, c)} sub={`Invested ${money(v.investedValue, c)}`} />
+        <StatCard label="Total Value" value={money(v.totalValue, c)} sub={`Invested ${money(v.investedValue, c)}`} />
       </div>
       <StatCard label="Cash" value={money(v.cashValue, c)} sub={v.totalValue > 0 ? `${pct((v.cashValue / v.totalValue) * 100)} of portfolio` : undefined} />
       <StatCard label="Today" value={money(v.dayChange, c, { sign: true })} valueClass={gainClass(v.dayChange)} sub={pct(v.dayChangePct, { sign: true, digits: 2 })} />

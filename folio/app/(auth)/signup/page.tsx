@@ -56,14 +56,14 @@ export default function SignUpPage() {
   if (info) {
     return (
       <>
-        <h1 className="text-2xl font-semibold">Check your inbox</h1>
+        <h1 className="text-2xl font-semibold">Check Your Inbox</h1>
         <div className="mt-4">
           <Alert tone="success">{info}</Alert>
         </div>
         <p className="mt-6 text-center text-sm text-muted">
           Already confirmed?{" "}
           <Link href="/login" className="font-medium text-brand hover:underline">
-            Log in
+            Log In
           </Link>
         </p>
       </>
@@ -72,15 +72,15 @@ export default function SignUpPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">Open your Folio</h1>
+      <h1 className="text-2xl font-semibold">Open Your Folio</h1>
       <p className="mt-1 text-sm text-muted">Track every stock, sector and dollar in one place.</p>
 
       <form onSubmit={onSubmit} method="post" className="mt-6 space-y-4" noValidate>
         {error && <Alert>{error}</Alert>}
-        <Field label="Display name" htmlFor="displayName" hint="Shown publicly if you ever publish your portfolio.">
+        <Field label="Display Name" htmlFor="displayName" hint="Shown publicly if you ever publish your portfolio.">
           <Input id="displayName" name="displayName" placeholder="e.g. TechBull88" maxLength={30} required />
         </Field>
-        <Field label="Full name (private)" htmlFor="fullName">
+        <Field label="Full Name (Private)" htmlFor="fullName">
           <Input id="fullName" name="fullName" autoComplete="name" maxLength={100} />
         </Field>
         <Field label="Email" htmlFor="email">
@@ -90,12 +90,12 @@ export default function SignUpPage() {
           <Field label="Password" htmlFor="password" hint="At least 8 characters.">
             <Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required />
           </Field>
-          <Field label="Confirm password" htmlFor="confirmPassword">
+          <Field label="Confirm Password" htmlFor="confirmPassword">
             <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" required />
           </Field>
         </div>
         <div className="grid grid-cols-[1fr_8rem] gap-3">
-          <Field label="Starting cash" htmlFor="startingCash" hint="Cash in your brokerage account today. Can be 0.">
+          <Field label="Starting Cash" htmlFor="startingCash" hint="Cash in your brokerage account today. Can be 0.">
             <Input id="startingCash" name="startingCash" type="number" inputMode="decimal" min={0} step="0.01" defaultValue="0" required />
           </Field>
           <Field label="Currency" htmlFor="startingCurrency">
@@ -109,7 +109,7 @@ export default function SignUpPage() {
           </Field>
         </div>
         <Button type="submit" className="w-full" disabled={!ready || busy}>
-          {busy ? messages.creatingAccount : "Create account"}
+          {busy ? messages.creatingAccount : "Create Account"}
         </Button>
       </form>
 

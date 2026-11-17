@@ -12,8 +12,8 @@ import { Alert, Button, Field, Input, Select } from "./ui";
 export type CashEntryView = { id: string; kind: "starting" | "balance" | "deposit" | "withdrawal"; amount: number; currency: string; entryDate: string };
 
 const KIND_LABEL: Record<CashEntryView["kind"], string> = {
-  starting: "Starting cash",
-  balance: "Balance update",
+  starting: "Starting Cash",
+  balance: "Balance Update",
   deposit: "Deposit",
   withdrawal: "Withdrawal",
 };
@@ -64,7 +64,7 @@ export function CashCard({
       <div className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-5">
         <h2 id="cash-heading" className="font-semibold">Cash</h2>
         <Button variant="outline" className="px-3 py-1.5 text-xs" onClick={() => { setError(null); setOpen(true); }}>
-          Update cash
+          Update Cash
         </Button>
       </div>
 
@@ -85,7 +85,7 @@ export function CashCard({
 
       {entries.length > 0 && (
         <details className="border-t border-line px-4 py-3 text-sm sm:px-5">
-          <summary className="cursor-pointer text-xs font-medium text-brand">Cash history ({entries.length})</summary>
+          <summary className="cursor-pointer text-xs font-medium text-brand">Cash History ({entries.length})</summary>
           <ul className="mt-2 divide-y divide-line">
             {entries.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-2 py-2">
@@ -113,12 +113,12 @@ export function CashCard({
         </details>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Update cash balance">
+      <Modal open={open} onClose={() => setOpen(false)} title="Update Cash Balance">
         <form onSubmit={onSubmit} method="post" className="space-y-4" noValidate>
           <p className="text-sm text-muted">Enter the total cash in your brokerage account. It replaces your previous balance from this date on.</p>
           {error && <Alert>{error}</Alert>}
           <div className="grid grid-cols-[1fr_7rem] gap-3">
-            <Field label="Cash balance" htmlFor="cash-amount">
+            <Field label="Cash Balance" htmlFor="cash-amount">
               <Input id="cash-amount" name="amount" type="number" inputMode="decimal" min="0" step="any" defaultValue={defaultAmount > 0 ? String(Math.round(defaultAmount * 100) / 100) : ""} required />
             </Field>
             <Field label="Currency" htmlFor="cash-currency">
@@ -129,12 +129,12 @@ export function CashCard({
               </Select>
             </Field>
           </div>
-          <Field label="As of" htmlFor="cash-date">
+          <Field label="As Of" htmlFor="cash-date">
             <Input id="cash-date" name="entryDate" type="date" max={todayLocal()} defaultValue={todayLocal()} required />
           </Field>
           <div className="flex gap-3">
             <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" className="flex-1" disabled={saving}>{saving ? messages.savingCash : "Save balance"}</Button>
+            <Button type="submit" className="flex-1" disabled={saving}>{saving ? messages.savingCash : "Save Balance"}</Button>
           </div>
         </form>
       </Modal>

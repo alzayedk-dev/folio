@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">Reset your password</h1>
+      <h1 className="text-2xl font-semibold">Reset Your Password</h1>
       <p className="mt-1 text-sm text-muted">We&apos;ll email you a link to choose a new one.</p>
       <form onSubmit={onSubmit} method="post" className="mt-6 space-y-4" noValidate>
         {sent && <Alert tone="success">{messages.auth.resetSent}</Alert>}
@@ -45,12 +45,12 @@ export default function ForgotPasswordPage() {
           <Input id="email" name="email" type="email" autoComplete="email" required />
         </Field>
         <Button type="submit" className="w-full" disabled={!ready || busy || sent}>
-          {busy ? "Sending…" : "Send reset link"}
+          {busy ? "Sending…" : "Send Reset Link"}
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted">
         <Link href="/login" className="font-medium text-brand hover:underline">
-          Back to log in
+          Back To Log In
         </Link>
       </p>
     </>

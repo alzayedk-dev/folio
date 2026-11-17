@@ -25,7 +25,7 @@ export function SectorTable({ sectors, base }: { sectors: SectorRow[]; base: str
   return (
     <section aria-labelledby="sector-heading" className="rounded-2xl border border-line bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
-        <h2 id="sector-heading" className="font-semibold">Sector weights</h2>
+        <h2 id="sector-heading" className="font-semibold">Sector Weights</h2>
         <p className="text-xs text-muted" title={NOTE}>
           Thresholds {SECTOR_THRESHOLDS.yellow}% / {SECTOR_THRESHOLDS.red}%
         </p>

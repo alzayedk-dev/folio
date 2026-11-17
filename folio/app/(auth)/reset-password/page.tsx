@@ -35,17 +35,17 @@ export default function ResetPasswordPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">Choose a new password</h1>
+      <h1 className="text-2xl font-semibold">Choose A New Password</h1>
       <form onSubmit={onSubmit} method="post" className="mt-6 space-y-4" noValidate>
         {error && <Alert>{error}</Alert>}
-        <Field label="New password" htmlFor="password" hint="At least 8 characters.">
+        <Field label="New Password" htmlFor="password" hint="At least 8 characters.">
           <Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required />
         </Field>
-        <Field label="Confirm new password" htmlFor="confirm">
+        <Field label="Confirm New Password" htmlFor="confirm">
           <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required />
         </Field>
         <Button type="submit" className="w-full" disabled={!ready || busy}>
-          {busy ? "Saving…" : "Update password"}
+          {busy ? "Saving…" : "Update Password"}
         </Button>
       </form>
     </>

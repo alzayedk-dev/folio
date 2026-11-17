@@ -69,7 +69,7 @@ export function UserMenu({ displayName, avatarUrl }: { displayName: string; avat
       {open && (
         <div role="menu" className="absolute right-0 mt-2 w-56 overflow-hidden rounded-xl border border-line bg-white shadow-lg">
           <div className="border-b border-line px-4 py-3">
-            <p className="text-xs text-muted">Signed in as</p>
+            <p className="text-xs text-muted">Signed In As</p>
             <p className="truncate font-medium">{displayName}</p>
           </div>
           <Link
@@ -86,7 +86,7 @@ export function UserMenu({ displayName, avatarUrl }: { displayName: string; avat
             onClick={signOut}
             className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-brand-soft hover:text-brand"
           >
-            <IconLogout className="h-4 w-4" /> Log out
+            <IconLogout className="h-4 w-4" /> Log Out
           </button>
         </div>
       )}

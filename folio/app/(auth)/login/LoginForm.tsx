@@ -37,7 +37,7 @@ export function LoginForm({ next, justReset }: { next: string; justReset: boolea
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">Welcome back</h1>
+      <h1 className="text-2xl font-semibold">Welcome Back</h1>
       <p className="mt-1 text-sm text-muted">Log in to check on your portfolio.</p>
 
       <form onSubmit={onSubmit} method="post" className="mt-6 space-y-4" noValidate>
@@ -51,18 +51,18 @@ export function LoginForm({ next, justReset }: { next: string; justReset: boolea
         </Field>
         <div className="flex justify-end">
           <Link href="/forgot-password" className="text-sm text-brand hover:underline">
-            Forgot password?
+            Forgot Password?
           </Link>
         </div>
         <Button type="submit" className="w-full" disabled={!ready || busy}>
-          {busy ? messages.signingIn : "Log in"}
+          {busy ? messages.signingIn : "Log In"}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted">
         New to Folio?{" "}
         <Link href="/signup" className="font-medium text-brand hover:underline">
-          Create an account
+          Create An Account
         </Link>
       </p>
     </>

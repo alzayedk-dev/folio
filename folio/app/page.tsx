@@ -4,12 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { Logo } from "@/components/ui";
 
 const FEATURES = [
-  { title: "Every holding, live", text: "Prices fill in automatically for US and international stocks, with P/L in $ or %." },
-  { title: "Sector check-up", text: "See your sector mix and get gentle warnings when one stock or sector gets too heavy." },
-  { title: "Performance since day one", text: "Track your portfolio against the S&P 500, Nasdaq 100 or Dow." },
-  { title: "Earnings reminders", text: "Know 10 days and 1 day ahead when your companies report." },
-  { title: "AI analyst", text: "Ask about stocks, sectors and markets. It explains, it doesn't advise." },
-  { title: "Public portfolios", text: "Publish your allocation in % only, and follow investors you like." },
+  { title: "Every Holding, Live", text: "Prices fill in automatically for US and international stocks, with P/L in $ or %." },
+  { title: "Sector Check-Up", text: "See your sector mix and get gentle warnings when one stock or sector gets too heavy." },
+  { title: "Performance Since Day One", text: "Track your portfolio against the S&P 500, Nasdaq 100 or Dow." },
+  { title: "Earnings Reminders", text: "Know 10 days and 1 day ahead when your companies report." },
+  { title: "AI Analyst", text: "Ask about stocks, sectors and markets. It explains, it doesn't advise." },
+  { title: "Public Portfolios", text: "Publish your allocation in % only, and follow investors you like." },
 ];
 
 export default async function Home() {
@@ -25,10 +25,10 @@ export default async function Home() {
         <Logo />
         <nav className="flex items-center gap-2">
           <Link href="/login" className="rounded-lg px-4 py-2 text-sm font-medium text-brand hover:bg-brand-soft">
-            Log in
+            Log In
           </Link>
           <Link href="/signup" className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong">
-            Sign up
+            Sign Up
           </Link>
         </nav>
       </header>
@@ -36,17 +36,17 @@ export default async function Home() {
       <main className="mx-auto max-w-6xl px-4">
         <section className="py-16 text-center sm:py-24">
           <h1 className="mx-auto max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            Your portfolio, <span className="text-brand">clearly.</span>
+            Your Portfolio, <span className="text-brand">Clearly.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-lg text-muted">
             Folio tracks your stocks, sectors and performance in one calm, simple place.
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Link href="/signup" className="rounded-lg bg-brand px-6 py-3 font-medium text-white hover:bg-brand-strong">
-              Open your Folio
+              Open Your Folio
             </Link>
             <Link href="/login" className="rounded-lg border border-brand px-6 py-3 font-medium text-brand hover:bg-brand-soft">
-              Log in
+              Log In
             </Link>
           </div>
         </section>

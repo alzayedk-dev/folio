@@ -68,7 +68,7 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
         <label className="text-xs text-muted">
           <span className="mb-1 block">Stock</span>
           <Select value={ticker} onChange={(e) => setTicker(e.target.value)} className="w-40 py-2" aria-label="Filter by stock">
-            <option value="all">All stocks</option>
+            <option value="all">All Stocks</option>
             {tickers.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
@@ -77,7 +77,7 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
         <label className="text-xs text-muted">
           <span className="mb-1 block">Type</span>
           <Select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="w-36 py-2" aria-label="Filter by type">
-            <option value="all">All types</option>
+            <option value="all">All Types</option>
             <option value="buy">Buys</option>
             <option value="sell">Sells</option>
             <option value="dividend">Dividends</option>
@@ -104,7 +104,7 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
                     <th scope="col" className="px-3 py-3 text-left font-medium">Date</th>
                     <th scope="col" className="px-3 py-3 text-left font-medium">Type</th>
                     <th scope="col" className="px-3 py-3 text-right font-medium">Shares</th>
-                    <th scope="col" className="px-3 py-3 text-right font-medium">Price per share</th>
+                    <th scope="col" className="px-3 py-3 text-right font-medium">Price Per Share</th>
                     <th scope="col" className="px-3 py-3 text-right font-medium">Fees</th>
                     <th scope="col" className="px-3 py-3 text-right font-medium">Total</th>
                     <th scope="col" className="px-3 py-3 text-right font-medium">Realized P/L</th>
