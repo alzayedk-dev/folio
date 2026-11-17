@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run --passWithNoTests",
-    "privacy": "node scripts/privacy-check.cjs"
+    "privacy": "node scripts/privacy-check.cjs",
+    "market-check": "node scripts/market-check.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

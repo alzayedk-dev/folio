@@ -18,6 +18,7 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "supabase/functions/**/index.ts", // Deno entry files (npm:/jsr: imports)
     ],
   },
 ];
