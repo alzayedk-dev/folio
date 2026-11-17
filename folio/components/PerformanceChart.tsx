@@ -15,9 +15,10 @@ import { Select } from "./ui";
 type BenchKey = "SPY" | "QQQ" | "DIA";
 const BENCH_LABEL: Record<BenchKey, string> = { SPY: "S&P 500", QQQ: "Nasdaq 100", DIA: "Dow Jones" };
 const RANGE_OPTIONS = RANGES.map((r) => ({ value: r, label: r === "ALL" ? "All" : r }));
+// % (true performance, money added excluded) comes first and is the default; $ shows account value
 const MODES = [
-  { value: "usd", label: "$" },
   { value: "pct", label: "%" },
+  { value: "usd", label: "$" },
 ] as const;
 
 const BRAND = "#047857";
@@ -47,7 +48,7 @@ export function PerformanceChart({
   others?: Pick<Portfolio, "id" | "name" | "kind">[];
 }) {
   const [range, setRange] = usePersistentState<Range>("folio.perfRange", "1Y", RANGES);
-  const [mode, setMode] = usePersistentState<"usd" | "pct">("folio.perfMode", "usd", ["usd", "pct"]);
+  const [mode, setMode] = usePersistentState<"usd" | "pct">("folio.perfMode.v2", "pct", ["pct", "usd"]);
   const [view, setView] = useState<"mine" | BenchKey>("mine");
   const [picked, setPicked] = useState<string[]>([]);
   const [series, setSeries] = useState<Record<string, { date: string; index: number }[] | "loading" | "error">>({});
@@ -114,7 +115,7 @@ export function PerformanceChart({
       {/* Controls: one row above the chart */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <SegmentedToggle label="Show value in dollars or percent" value={showPct ? "pct" : "usd"} options={MODES} onChange={(v) => !comparing && setMode(v)} />
+          <SegmentedToggle label="Show return in percent or value in dollars" value={showPct ? "pct" : "usd"} options={MODES} onChange={(v) => !comparing && setMode(v)} />
           <Select value={view} onChange={(e) => setView(e.target.value as typeof view)} aria-label="Benchmark" className="w-auto py-1.5 text-xs">
             <option value="mine">No Benchmark</option>
             <option value="SPY">Vs. S&amp;P 500</option>
