@@ -341,3 +341,19 @@ end; $$;
 revoke execute on function public.notify_followers() from public, anon, authenticated;
 create trigger on_transaction_notify_followers after insert on public.transactions
   for each row execute function public.notify_followers();
+
+-- ---------------------------------------------------------------
+-- Daily job: private secret + pg_cron schedule calling the "daily" Edge Function at 06:00 UTC
+-- ---------------------------------------------------------------
+create table if not exists public.app_config (key text primary key, value text not null, updated_at timestamptz not null default now());
+alter table public.app_config enable row level security; -- no policies: service role / database only
+revoke all on public.app_config from anon, authenticated;
+insert into public.app_config (key, value) values ('cron_secret', encode(gen_random_bytes(32), 'hex')) on conflict (key) do nothing;
+create extension if not exists pg_cron;
+create extension if not exists pg_net with schema extensions;
+select cron.schedule('folio-daily', '0 6 * * *', $job$
+  select net.http_post(
+    url := 'https://zwtqzejyjankgchxyizf.supabase.co/functions/v1/daily',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', (select value from public.app_config where key = 'cron_secret')),
+    body := '{}'::jsonb, timeout_milliseconds := 60000);
+$job$);
