@@ -180,6 +180,15 @@ Opens when a ticker is clicked.
 - **What creates an alert:** earnings in 10 days or 1 day; a followed portfolio's owner trades.
 - The user controls each channel in Settings.
 
+### 3.14 Precious metals (gold and silver)
+- A third asset type next to **stocks** and **cash**.
+- The transaction pop-up gets an asset choice: **Stock · Gold · Silver**. For metals the user enters **weight** in **troy ounces or grams** (switchable), price per ounce or per gram, date, fees and notes. Buy and Sell work like stocks; selling more than owned is blocked.
+- Stored internally in troy ounces (1 oz = 31.1035 g), so either unit can be shown.
+- **Current price:** gold and silver prices in USD per troy ounce from Yahoo Finance (COMEX front-month futures GC=F / SI=F, which track the spot price closely), converted to the user's base currency.
+- **Portfolio tab:** a "Precious metals" table (metal, weight, avg price, current price, value, % of portfolio, P/L in $/%) under the holdings, metals counted in the summary cards and total value, and an **asset mix** line (Stocks / Precious metals / Cash).
+- Metals appear as their own row ("Precious metals") in the sector weights table, with no stock-sector warning.
+- Performance and public portfolios include metals the same way as stocks (public view in % only).
+
 ### 3.12 About and Contact pages
 - **About page:** explains what Folio is for, who it helps, what it does and doesn't do (monitors, never trades or advises), and where the data comes from.
 - **Contact page:** Khaled Alzayed with the contact email (alzayed.k@yahoo.com, shown as a clickable email link).

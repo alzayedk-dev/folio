@@ -137,6 +137,11 @@ Only the public Supabase URL/key and the Supabase secret key go in `folio/.env.l
 - **Files:** `app/(app)/transactions/page.tsx`, `components/TransactionList.tsx`
 - **Depends on:** 7
 
+**Task 10b: Precious metals (gold, silver)** · M · 2 h
+- Metals as tickers GC=F (gold) and SI=F (silver) in the existing transactions table, quantity in troy ounces; the pop-up gets a Stock / Gold / Silver switch with an oz ⇄ grams toggle (converted on save); market function returns metal prices; Portfolio gets a Precious metals table + asset-mix line; sector table gets a "Precious metals" row (no warning).
+- **Accept:** buy 1 oz gold and 100 g silver; values, P/L and weights match a hand calculation; grams convert correctly (100 g = 3.2151 oz); overselling blocked.
+- **Files:** `components/TransactionModal.tsx`, `components/MetalsTable.tsx`, `lib/metals.ts` (+ tests), `lib/portfolio.ts`, `supabase/functions/market/*`
+
 **Task 11: First deploy to Vercel** · S · 45 min
 - Connect the repo/folder to Vercel, set environment variables, deploy.
 - **Accept:** the live URL works for sign-up → add a transaction → see holdings.
