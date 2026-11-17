@@ -15,12 +15,12 @@ const DELIVERABLES = [
 ];
 
 const FEATURES = [
-  { title: "Live Holdings", text: "Prices fill in automatically for US and international stocks, plus gold and silver by the ounce or gram." },
-  { title: "Sector Check-Up", text: "See your sector mix with clear 25% / 40% guideline markers and gentle warnings when one stock or sector gets heavy." },
-  { title: "Performance", text: "A time-weighted return chart that ignores deposits, compared with the S&P 500, Nasdaq 100 or Dow." },
-  { title: "News And Earnings", text: "Latest headlines for every stock you own, plus reminders 10 days and 1 day before each company reports." },
-  { title: "AI Analyst", text: "Ask about stocks, sectors and markets. It knows your mix in % terms, and it explains rather than advises." },
-  { title: "Public Portfolios", text: "Publish your allocation in % only, follow investors you like and get an alert when they trade." },
+  { title: "Live Holdings", text: "Live prices for your stocks, gold and silver from markets around the world." },
+  { title: "Sector Check-Up", text: "See your holding and sector weights, and get a heads-up when you're too concentrated." },
+  { title: "Performance", text: "See how your portfolio is doing over time and how it compares with the market." },
+  { title: "News And Earnings", text: "The latest headlines and earnings reminders for the companies you own." },
+  { title: "AI Analyst", text: "Ask questions about stocks, sectors and markets, and get clear answers." },
+  { title: "Public Portfolios", text: "Share your holdings and follow other investors." },
 ];
 
 const STEPS = [

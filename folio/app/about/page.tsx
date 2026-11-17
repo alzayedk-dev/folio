@@ -10,18 +10,18 @@ const SECTIONS = [
   },
   {
     title: "Who It Helps",
-    body: "Self-directed investors, from beginners checking their first few shares to experienced investors managing positions on several exchanges. It works with US and international stocks, ETFs, and gold and silver measured in troy ounces or grams.",
+    body: "Self-directed investors, from beginners checking their first few shares to experienced investors managing positions on several exchanges. It works with US and international stocks, ETFs, gold and silver.",
   },
   {
     title: "What You Get",
     list: [
-      "Live prices and total value in the currency you choose",
-      "Profit and loss per holding and in total, in $ or %",
-      "Sector weights with 25% / 40% guideline warnings, and 10% / 20% warnings per stock",
-      "Performance since your first trade, compared with the S&P 500, Nasdaq 100 or Dow",
-      "Earnings reminders 10 days and 1 day before your companies report",
-      "An AI analyst for questions about stocks, sectors and markets",
-      "Optional public portfolios in % only, with follow alerts",
+      "Live prices and your total portfolio value",
+      "Profit and loss for your trades and your whole portfolio",
+      "Holding and sector weights, with helpful warnings",
+      "Performance tracking compared with the market",
+      "News and earnings reminders for the companies you own",
+      "An AI analyst for your market questions",
+      "Public portfolios you can share and follow",
     ],
   },
   {
