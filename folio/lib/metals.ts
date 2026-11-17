@@ -16,8 +16,8 @@ export type MetalKey = "gold" | "silver";
 export type WeightUnit = "oz" | "g" | "tola";
 
 export const WEIGHT_UNITS: { value: WeightUnit; label: string; short: string }[] = [
-  { value: "oz", label: "Troy Oz", short: "oz" },
   { value: "g", label: "Grams", short: "g" },
+  { value: "oz", label: "Troy Oz", short: "oz" },
   { value: "tola", label: "Tola", short: "tola" },
 ];
 

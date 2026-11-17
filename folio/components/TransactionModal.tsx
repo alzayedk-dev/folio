@@ -89,7 +89,7 @@ export function TransactionModal({
   const [form, setForm] = useState({ shares: "", price: "", amount: "", fees: "", tradeDate: "", notes: "" });
   const [error, setError] = useState<{ message: string; field?: string } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [unit, setUnitState] = useState<WeightUnit>("oz");
+  const [unit, setUnitState] = useState<WeightUnit>("g"); // grams by default; Troy Oz and Tola one click away
   const metal = !!picked && isMetal(picked.ticker);
   const metalKey = picked && isMetal(picked.ticker) ? METALS[picked.ticker].key : "gold";
   // How gold/silver is entered: a bar (weight + purity), a coin from the list, or a custom coin
@@ -122,7 +122,7 @@ export function TransactionModal({
     try {
       const q = await market.quotes(createClient(), [ticker]).catch(() => null);
       const quote = q?.quotes[ticker];
-      setUnitState("oz");
+      setUnitState("g");
       setType("buy");
       setMetalForm("bar");
       setPurity(1);
@@ -140,7 +140,7 @@ export function TransactionModal({
     if (!open) return;
     setError(null);
     setSaving(false);
-    setUnitState("oz");
+    setUnitState("g");
     if (editing) {
       setPicked({ ticker: editing.ticker, name: editing.name, exchange: null, currency: editing.currency, sector: "", currentPrice: null });
       setType(editing.type);
@@ -158,10 +158,11 @@ export function TransactionModal({
         // back to "number of coins" and "price per coin"
         shares = String(editing.coinCount);
         price = round(paid / editing.coinCount, 2); // cents: stored price-per-ounce rounding would otherwise show e.g. 210.0002
-      } else if (isMetal(editing.ticker) && form === "bar" && editing.purity && editing.purity < 1 && editing.shares) {
-        // back to the bar's full weight (pure weight ÷ purity) and price per ounce of bar
-        shares = round(editing.shares / editing.purity);
-        price = round((editing.price ?? 0) * editing.purity, 4);
+      } else if (isMetal(editing.ticker) && editing.shares) {
+        // bars open in grams: the bar's full weight (pure weight ÷ purity) and price per gram of bar
+        const p = form === "bar" && editing.purity ? editing.purity : 1;
+        shares = round(fromOunces(editing.shares / p, "g"), 4);
+        price = round(fromPricePerOunce(editing.price ?? 0, "g") * p, 4);
       }
       setForm({
         shares,

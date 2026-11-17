@@ -16,7 +16,7 @@ const PL = [
 
 /** Gold / silver positions: pure metal weight (coins converted to their pure content), valued at melt value. */
 export function MetalsTable({ metals, base, coins = {} }: { metals: HoldingRow[]; base: string; coins?: Record<string, { label: string; count: number }[]> }) {
-  const [unit, setUnit] = usePersistentState<WeightUnit>("folio.metalUnit", "oz", ["oz", "g", "tola"]);
+  const [unit, setUnit] = usePersistentState<WeightUnit>("folio.metalUnit", "g", ["g", "oz", "tola"]);
   const [mode, setMode] = usePersistentState<"usd" | "pct">("folio.plMode", "usd", ["usd", "pct"]);
   const per = WEIGHT_UNITS.find((u) => u.value === unit)?.short ?? "oz";
   const total = metals.reduce((a, m) => a + m.value, 0);

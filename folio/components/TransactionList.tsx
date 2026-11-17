@@ -79,9 +79,9 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
     <section className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-xs text-muted">
-          <span className="mb-1 block">Stock</span>
-          <Select value={ticker} onChange={(e) => setTicker(e.target.value)} className="w-40 py-2" aria-label="Filter by stock">
-            <option value="all">All Stocks</option>
+          <span className="mb-1 block">Asset</span>
+          <Select value={ticker} onChange={(e) => setTicker(e.target.value)} className="w-40 py-2" aria-label="Filter by asset">
+            <option value="all">All Assets</option>
             {tickers.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
@@ -113,7 +113,7 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
               <table className="w-full min-w-[58rem] text-sm">
                 <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
                   <tr>
-                    <th scope="col" className="sticky left-0 z-[1] bg-surface px-3 py-3 text-left font-medium shadow-[1px_0_0_var(--border)]">Stock</th>
+                    <th scope="col" className="sticky left-0 z-[1] bg-surface px-3 py-3 text-left font-medium shadow-[1px_0_0_var(--border)]">Asset</th>
                     <th scope="col" className="px-3 py-3 text-left font-medium">Date</th>
                     <th scope="col" className="px-3 py-3 text-left font-medium">Type</th>
                     <th scope="col" className="px-3 py-3 text-right font-medium">Shares</th>
