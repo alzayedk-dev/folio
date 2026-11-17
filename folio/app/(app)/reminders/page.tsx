@@ -72,7 +72,7 @@ function Flag({ days, first, second }: { days: number; first: number; second: nu
 
 async function RemindersContent({ first, second }: { first: number; second: number | null }) {
   const supabase = await createClient();
-  const { txns, cash, symbols } = await loadLedgerData(supabase);
+  const { txns, cash, symbols } = await loadLedgerData(supabase, "all");
   const held = Object.values(replayLedger(txns, cash).positions)
     .filter((p) => p.shares > 1e-9 && !isMetal(p.ticker))
     .map((p) => p.ticker);

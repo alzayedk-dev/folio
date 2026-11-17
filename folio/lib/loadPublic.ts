@@ -1,8 +1,12 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SnapshotHolding, SnapshotReturns, SnapshotSector } from "./snapshot";
+import type { PortfolioKind } from "./portfolios";
 
 export type PublicPortfolio = {
+  portfolioId: string;
+  portfolioName: string;
+  portfolioKind: PortfolioKind;
   userId: string;
   displayName: string;
   bio: string | null;
@@ -15,9 +19,14 @@ export type PublicPortfolio = {
   updatedAt: string;
 };
 
+const UUID = /^[0-9a-f-]{36}$/i;
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function toPublic(r: any): PublicPortfolio {
   return {
+    portfolioId: r.portfolio_id,
+    portfolioName: r.portfolio_name ?? "Portfolio",
+    portfolioKind: r.portfolio_kind === "paper" ? "paper" : "real",
     userId: r.user_id,
     displayName: r.display_name,
     bio: r.bio,
@@ -36,13 +45,20 @@ function toPublic(r: any): PublicPortfolio {
 export async function listPublic(supabase: SupabaseClient): Promise<PublicPortfolio[]> {
   const { data } = await supabase
     .from("public_snapshots")
-    .select("user_id, display_name, bio, avatar_url, returns, holdings_count, sectors, updated_at")
-    .limit(200);
+    .select("portfolio_id, portfolio_name, portfolio_kind, user_id, display_name, bio, avatar_url, returns, holdings_count, sectors, updated_at")
+    .limit(300);
   return (data ?? []).map(toPublic);
 }
 
-export async function getPublic(supabase: SupabaseClient, userId: string): Promise<PublicPortfolio | null> {
-  if (!/^[0-9a-f-]{36}$/i.test(userId)) return null;
-  const { data } = await supabase.from("public_snapshots").select("*").eq("user_id", userId).maybeSingle();
+export async function getPublic(supabase: SupabaseClient, portfolioId: string): Promise<PublicPortfolio | null> {
+  if (!UUID.test(portfolioId)) return null;
+  const { data } = await supabase.from("public_snapshots").select("*").eq("portfolio_id", portfolioId).maybeSingle();
   return data ? toPublic(data) : null;
+}
+
+/** Old links were /public/<userId>: find that person's first published portfolio. */
+export async function firstPublicPortfolioOf(supabase: SupabaseClient, userId: string): Promise<string | null> {
+  if (!UUID.test(userId)) return null;
+  const { data } = await supabase.from("public_snapshots").select("portfolio_id, updated_at").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1);
+  return data?.[0]?.portfolio_id ?? null;
 }

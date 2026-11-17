@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isOwnAvatarUrl, profileSchema } from "@/lib/validation";
 import { messages } from "@/lib/messages";
 import type { ActionResult } from "./transactions";
-import { refreshPublicSnapshot } from "@/lib/publicSnapshot";
+import { refreshAllPublicSnapshots } from "@/lib/publicSnapshot";
 
 async function getUserClient() {
   const supabase = await createClient();
@@ -36,7 +36,6 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
       notify_inapp: v.notifyInapp,
       notify_email: v.notifyEmail,
       notify_push: v.notifyPush,
-      is_public: v.isPublic,
       show_shariah: v.showShariah,
       reminder_first: v.reminderFirst,
       reminder_second: v.reminderSecond,
@@ -47,9 +46,8 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
     if (error.code === "23505") return { ok: false, error: "That display name is taken. Try another one.", field: "displayName" };
     return { ok: false, error: messages.generic };
   }
-  // Unpublish → delete the % snapshot immediately; publish → build it right after the response is sent
-  if (v.isPublic) after(() => refreshPublicSnapshot(supabase).catch(() => undefined));
-  else await supabase.from("public_snapshots").delete().eq("user_id", user.id);
+  // Display name and bio are copied into published snapshots: refresh them after the response is sent
+  after(() => refreshAllPublicSnapshots(supabase, user.id).catch(() => undefined));
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -62,6 +60,7 @@ export async function setAvatar(url: string): Promise<ActionResult> {
 
   const { error } = await supabase.from("profiles").update({ avatar_url: url || null }).eq("id", user.id);
   if (error) return { ok: false, error: messages.generic };
+  after(() => refreshAllPublicSnapshots(supabase, user.id).catch(() => undefined));
   revalidatePath("/", "layout");
   return { ok: true };
 }

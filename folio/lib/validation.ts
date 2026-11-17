@@ -103,7 +103,6 @@ export const profileSchema = z
     notifyInapp: checkbox,
     notifyEmail: checkbox,
     notifyPush: checkbox,
-    isPublic: checkbox,
     showShariah: checkbox,
     reminderFirst: z.coerce.number().int().min(1).max(30).optional().default(7),
     reminderSecond: z
@@ -112,7 +111,6 @@ export const profileSchema = z
       .default(1)
       .transform((v) => (v === "off" ? null : v)),
   })
-  .refine((v) => !v.isPublic || v.bio.length >= 10, { message: profileMessages.bioNeeded, path: ["bio"] })
   .refine((v) => v.reminderSecond == null || v.reminderSecond < v.reminderFirst, { message: profileMessages.reminders, path: ["reminderSecond"] });
 
 export type ProfileInput = z.infer<typeof profileSchema>;

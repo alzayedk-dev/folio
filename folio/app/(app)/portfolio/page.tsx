@@ -30,9 +30,9 @@ export default function PortfolioPage() {
 
 async function PortfolioContent() {
   const supabase = await createClient();
-  const { ledger, valuation: v, notice, asOf, cash, showShariah } = await loadValuation(supabase);
+  const { ledger, valuation: v, notice, asOf, cash, showShariah, portfolioId } = await loadValuation(supabase);
   const positions = toPositionSummary(ledger);
-  after(() => refreshPublicSnapshotIfStale(supabase).catch(() => undefined));
+  after(() => refreshPublicSnapshotIfStale(supabase, portfolioId).catch(() => undefined));
   const hasAnything = v.holdings.length > 0 || v.cashValue > 0;
   const stocks = v.holdings.filter((h) => h.sector !== METALS_SECTOR);
   const metals = v.holdings.filter((h) => h.sector === METALS_SECTOR);

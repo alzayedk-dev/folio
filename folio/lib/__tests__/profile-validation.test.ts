@@ -6,12 +6,7 @@ const base = { displayName: "TechBull88", fullName: "", bio: "", baseCurrency: "
 describe("profileSchema", () => {
   it("reads checkboxes as true/false", () => {
     const r = profileSchema.parse({ ...base, notifyInapp: "on" });
-    expect(r).toMatchObject({ notifyInapp: true, notifyEmail: false, notifyPush: false, isPublic: false });
-  });
-  it("requires a bio of at least 10 characters to publish", () => {
-    const r = profileSchema.safeParse({ ...base, isPublic: "on", bio: "short" });
-    expect(r.error?.issues[0].message).toBe(profileMessages.bioNeeded);
-    expect(profileSchema.safeParse({ ...base, isPublic: "on", bio: "Long-term dividend investor" }).success).toBe(true);
+    expect(r).toMatchObject({ notifyInapp: true, notifyEmail: false, notifyPush: false, showShariah: false });
   });
   it("defaults reminders to 7 days and 1 day before, and accepts custom or off", () => {
     expect(profileSchema.parse(base)).toMatchObject({ reminderFirst: 7, reminderSecond: 1 });

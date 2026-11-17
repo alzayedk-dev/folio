@@ -15,26 +15,28 @@ async function getUserClient() {
   return { supabase, user };
 }
 
-export async function followUser(followeeId: string): Promise<ActionResult> {
+export async function followPortfolio(portfolioId: string): Promise<ActionResult> {
   const { supabase, user } = await getUserClient();
   if (!user) return { ok: false, error: "Your session has expired. Please log in again." };
-  if (!UUID.test(followeeId)) return { ok: false, error: messages.generic };
-  if (followeeId === user.id) return { ok: false, error: "You can't follow your own portfolio." };
-  const { error } = await supabase.from("follows").insert({ followee_id: followeeId });
-  // 23505 = already following (fine); RLS refusal = the portfolio isn't public anymore
-  if (error && error.code !== "23505") return { ok: false, error: "This portfolio isn't public anymore, so it can't be followed." };
-  revalidatePath(`/public/${followeeId}`);
+  if (!UUID.test(portfolioId)) return { ok: false, error: messages.generic };
+  const { error } = await supabase.from("follows").insert({ portfolio_id: portfolioId });
+  // 23505 = already following (fine); cannot_follow = your own portfolio; RLS refusal = not public anymore
+  if (error && error.code !== "23505") {
+    if (error.message?.includes("cannot_follow")) return { ok: false, error: "You can't follow your own portfolio." };
+    return { ok: false, error: "This portfolio isn't public anymore, so it can't be followed." };
+  }
+  revalidatePath(`/public/p/${portfolioId}`);
   revalidatePath("/public");
   return { ok: true };
 }
 
-export async function unfollowUser(followeeId: string): Promise<ActionResult> {
+export async function unfollowPortfolio(portfolioId: string): Promise<ActionResult> {
   const { supabase, user } = await getUserClient();
   if (!user) return { ok: false, error: "Your session has expired. Please log in again." };
-  if (!UUID.test(followeeId)) return { ok: false, error: messages.generic };
-  const { error } = await supabase.from("follows").delete().eq("followee_id", followeeId);
+  if (!UUID.test(portfolioId)) return { ok: false, error: messages.generic };
+  const { error } = await supabase.from("follows").delete().eq("portfolio_id", portfolioId);
   if (error) return { ok: false, error: messages.generic };
-  revalidatePath(`/public/${followeeId}`);
+  revalidatePath(`/public/p/${portfolioId}`);
   revalidatePath("/public");
   return { ok: true };
 }

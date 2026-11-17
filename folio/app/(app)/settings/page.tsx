@@ -14,7 +14,7 @@ export default async function SettingsPage() {
 
   const { data: p } = await supabase
     .from("profiles")
-    .select("display_name, full_name, bio, avatar_url, base_currency, notify_inapp, notify_email, notify_push, is_public, show_shariah, reminder_first, reminder_second")
+    .select("display_name, full_name, bio, avatar_url, base_currency, notify_inapp, notify_email, notify_push, show_shariah, reminder_first, reminder_second")
     .eq("id", user.id)
     .single();
 
@@ -33,7 +33,6 @@ export default async function SettingsPage() {
           notifyInapp: p?.notify_inapp ?? true,
           notifyEmail: p?.notify_email ?? true,
           notifyPush: p?.notify_push ?? false,
-          isPublic: p?.is_public ?? false,
           showShariah: p?.show_shariah ?? true,
           reminderFirst: p?.reminder_first ?? 7,
           reminderSecond: p ? p.reminder_second : 1,

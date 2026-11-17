@@ -7,6 +7,8 @@ import { Logo } from "./ui";
 import { UserMenu } from "./UserMenu";
 import { NotificationBell } from "./NotificationBell";
 import { SiteFooter } from "./SiteFooter";
+import { PortfolioSwitcher } from "./PortfolioSwitcher";
+import type { Portfolio } from "@/lib/portfolios";
 import { IconAI, IconPerformance, IconPortfolio, IconPublic, IconReminders, IconTransactions } from "./icons";
 
 type Tab = { href: string; label: string; short: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
@@ -20,16 +22,26 @@ export const TABS: Tab[] = [
   { href: "/public", label: "Public", short: "Public", icon: IconPublic },
 ];
 
+const SWITCHER_PATHS = ["/portfolio", "/transactions", "/performance", "/ai", "/stock"];
+
 export function AppShell({
   displayName,
   avatarUrl,
+  portfolios = [],
+  currentPortfolioId = null,
+  baseCurrency = "USD",
   children,
 }: {
   displayName: string;
   avatarUrl: string | null;
+  portfolios?: Portfolio[];
+  currentPortfolioId?: string | null;
+  baseCurrency?: string;
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  // Pages that show one portfolio get the switcher (Reminders covers all portfolios; Public and Settings none)
+  const showSwitcher = !!currentPortfolioId && SWITCHER_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
@@ -71,7 +83,10 @@ export function AppShell({
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-10">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-10">
+        {showSwitcher && <PortfolioSwitcher portfolios={portfolios} currentId={currentPortfolioId!} baseCurrency={baseCurrency} />}
+        {children}
+      </main>
       <div className="pb-20 md:pb-0">
         <SiteFooter signedIn />
       </div>

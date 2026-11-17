@@ -16,7 +16,7 @@ export type BenchmarkKey = (typeof BENCHMARKS)[number]["key"];
  * Loads everything the Performance tab needs and builds the daily value series on the server.
  * Market problems degrade gracefully: missing history falls back to trade prices, with a notice.
  */
-export async function loadPerformance(supabase: SupabaseClient): Promise<{
+export async function loadPerformance(supabase: SupabaseClient, portfolioId?: string): Promise<{
   points: DailyPoint[];
   firstDate: string | null;
   today: string;
@@ -25,7 +25,7 @@ export async function loadPerformance(supabase: SupabaseClient): Promise<{
   notice: string | null;
   usesTodaysFx: boolean;
 }> {
-  const { txns, cash, baseCurrency } = await loadLedgerData(supabase);
+  const { txns, cash, baseCurrency } = await loadLedgerData(supabase, portfolioId);
   const today = new Date().toISOString().slice(0, 10);
   const empty = { SPY: [], QQQ: [], DIA: [] } as Record<BenchmarkKey, PricePoint[]>;
   const dates = [...txns.map((t) => t.tradeDate), ...cash.map((c) => c.entryDate)].sort();

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { loadValuation } from "@/lib/loadValuation";
+import { getCurrentPortfolio } from "@/lib/currentPortfolio";
 import { buildAiContext } from "@/lib/aiContext";
 import { messages } from "@/lib/messages";
 
@@ -32,11 +33,12 @@ export async function askAI(question: string): Promise<AskResult> {
   if ((lastMinute ?? 0) >= PER_MINUTE) return { ok: false, error: "Easy on the ticker tape! Please wait a minute before asking again." };
   if ((lastDay ?? 0) >= PER_DAY) return { ok: false, error: "You've reached today's limit for the AI analyst. It resets in 24 hours." };
 
-  const [{ data: history }, valuation] = await Promise.all([
+  const [{ data: history }, valuation, portfolio] = await Promise.all([
     supabase.from("ai_messages").select("role, content").order("created_at", { ascending: false }).limit(10),
     loadValuation(supabase).then((r) => r.valuation).catch(() => null),
+    getCurrentPortfolio(),
   ]);
-  const context = valuation ? buildAiContext(valuation) : "Portfolio data is temporarily unavailable.";
+  const context = valuation ? buildAiContext(valuation, portfolio ? { name: portfolio.name, kind: portfolio.kind } : undefined) : "Portfolio data is temporarily unavailable.";
   const convo = [...(history ?? []).reverse(), { role: "user", content: q }];
 
   await supabase.from("ai_messages").insert({ role: "user", content: q });

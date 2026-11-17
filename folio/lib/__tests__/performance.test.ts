@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDailySeries, rangeStart, sliceRange, rangeStats, rebaseBenchmark, addDays } from "../performance";
+import { buildDailySeries, rangeStart, sliceRange, rangeStats, rebaseBenchmark, addDays, rebaseIndex } from "../performance";
 import type { Txn, CashEntry } from "../portfolio";
 import type { FxTable } from "../market";
 
@@ -139,5 +139,24 @@ describe("ranges and stats", () => {
     ];
     const b = rebaseBenchmark(closes, ["2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04", "2026-01-05"]);
     expect(b.map((x) => Math.round(x.pct * 10) / 10)).toEqual([0, 10, 10, 10, -5]);
+  });
+});
+
+describe("rebaseIndex (compare portfolios)", () => {
+  it("rebases another portfolio to 0% on the first shared date and carries values forward", () => {
+    const other = [
+      { date: "2026-01-02", index: 1.1 },
+      { date: "2026-01-05", index: 1.21 },
+    ];
+    const r = rebaseIndex(other, ["2026-01-02", "2026-01-03", "2026-01-05"]);
+    expect(r[0]).toBeCloseTo(0);
+    expect(r[1]).toBeCloseTo(0); // weekend: carried forward
+    expect(r[2]).toBeCloseTo(10);
+  });
+  it("has no line before the other portfolio started", () => {
+    const r = rebaseIndex([{ date: "2026-03-01", index: 1 }, { date: "2026-03-02", index: 1.05 }], ["2026-02-27", "2026-03-01", "2026-03-02"]);
+    expect(r[0]).toBeNull();
+    expect(r[1]).toBeCloseTo(0);
+    expect(r[2]).toBeCloseTo(5);
   });
 });

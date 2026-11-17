@@ -10,8 +10,8 @@ import { messages } from "./messages";
  * run through the calculation engine. Market problems never break the page: we fall back to
  * average cost and return a friendly notice instead.
  */
-export async function loadValuation(supabase: SupabaseClient) {
-  const data = await loadLedgerData(supabase);
+export async function loadValuation(supabase: SupabaseClient, portfolioId?: string) {
+  const data = await loadLedgerData(supabase, portfolioId);
   const { txns, cash, symbols, baseCurrency } = data;
 
   // Which stocks are still held (no need to price closed positions)

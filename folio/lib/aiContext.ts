@@ -3,11 +3,19 @@
 import type { Valuation } from "./portfolio";
 import { isMetal, METALS } from "./metals";
 
-export function buildAiContext(v: Valuation): string {
-  if (v.totalValue <= 0) return "The user has no holdings or cash recorded yet.";
+export function buildAiContext(v: Valuation, portfolio?: { name: string; kind: "real" | "paper" }): string {
+  const lines: string[] = [];
+  if (portfolio) {
+    const name = portfolio.name.replace(/[\r\n"]/g, " ").slice(0, 40);
+    lines.push(
+      portfolio.kind === "paper"
+        ? `Portfolio being viewed: "${name}", a PAPER (practice, pretend-money) portfolio the user uses to test ideas.`
+        : `Portfolio being viewed: "${name}", a real-money portfolio.`,
+    );
+  }
+  if (v.totalValue <= 0) return [...lines, "This portfolio has no holdings or cash recorded yet."].join("\n");
   const total = v.totalValue;
   const p = (x: number) => `${((x / total) * 100).toFixed(1)}%`;
-  const lines: string[] = [];
   lines.push(`Asset mix: Stocks ${p(v.stocksValue)}, Precious metals ${p(v.metalsValue)}, Cash ${p(v.cashValue)}.`);
   if (v.holdings.length) {
     lines.push("Holdings (% of total portfolio, sector, unrealized return):");

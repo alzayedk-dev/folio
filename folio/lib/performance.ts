@@ -141,3 +141,20 @@ export function rebaseBenchmark(closes: PricePoint[], dates: string[]): { date: 
   const base = at(dates[0]);
   return dates.map((d) => ({ date: d, pct: (at(d) / base - 1) * 100 }));
 }
+
+/**
+ * Another portfolio's growth index on the given dates, rebased to 0% at the first date where it exists.
+ * Days before that portfolio started are null (no line yet). Index values are carried forward.
+ */
+export function rebaseIndex(series: { date: string; index: number }[], dates: string[]): (number | null)[] {
+  const sorted = [...series].sort((a, b) => (a.date < b.date ? -1 : 1));
+  let i = -1;
+  let base: number | null = null;
+  return dates.map((d) => {
+    while (i + 1 < sorted.length && sorted[i + 1].date <= d) i++;
+    if (i < 0) return null;
+    const v = sorted[i].index;
+    if (base == null) base = v;
+    return base > 0 ? (v / base - 1) * 100 : null;
+  });
+}

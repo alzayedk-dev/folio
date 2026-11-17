@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CURRENCIES } from "@/lib/currencies";
 import { messages, authErrorMessage } from "@/lib/messages";
-import { profileMessages } from "@/lib/validation";
 import { updateProfile, setAvatar } from "@/app/(app)/actions/profile";
 import { Avatar } from "./UserMenu";
 import { Switch } from "./Switch";
@@ -22,7 +21,6 @@ export type SettingsProfile = {
   notifyInapp: boolean;
   notifyEmail: boolean;
   notifyPush: boolean;
-  isPublic: boolean;
   showShariah: boolean;
   reminderFirst: number;
   reminderSecond: number | null;
@@ -48,7 +46,6 @@ export function SettingsForm({ profile }: { profile: SettingsProfile }) {
     notifyInapp: profile.notifyInapp,
     notifyEmail: profile.notifyEmail,
     notifyPush: profile.notifyPush,
-    isPublic: profile.isPublic,
     showShariah: profile.showShariah,
   });
   const [bio, setBio] = useState(profile.bio);
@@ -58,14 +55,6 @@ export function SettingsForm({ profile }: { profile: SettingsProfile }) {
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState<string | null>(null);
   const [pw, setPw] = useState<{ tone: "error" | "success"; text: string } | null>(null);
-
-  function setPublic(v: boolean) {
-    setToggles((t) => ({ ...t, isPublic: v }));
-    if (v && bio.trim().length < 10) {
-      setStatus({ tone: "error", text: profileMessages.bioNeeded, field: "bio" });
-      bioRef.current?.focus();
-    }
-  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -235,14 +224,10 @@ export function SettingsForm({ profile }: { profile: SettingsProfile }) {
           />
         </Section>
 
-        <Section title="Public Portfolio" description="Share your allocation with other Folio users. Only percentages are shown, never dollar amounts, share counts or cash.">
-          <Switch
-            name="isPublic"
-            label="Publish My Portfolio"
-            description={toggles.isPublic ? "Visible on the Public tab. Others can follow you." : "Private. Only you can see it."}
-            checked={toggles.isPublic}
-            onChange={setPublic}
-          />
+        <Section title="Public Portfolios" description="Share a portfolio with other Folio users. Only percentages are shown, never dollar amounts, share counts or cash.">
+          <p className="text-sm text-muted">
+            Publish each portfolio on its own from <strong className="text-foreground">Manage</strong>, next to the portfolio switcher on the Portfolio tab. Your display name and bio above appear on every portfolio you publish.
+          </p>
         </Section>
 
         {status && <Alert tone={status.tone}>{status.text}</Alert>}

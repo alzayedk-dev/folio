@@ -2,10 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { followUser, unfollowUser } from "@/app/(app)/actions/social";
+import { followPortfolio, unfollowPortfolio } from "@/app/(app)/actions/social";
 
 /** Follow / Following toggle with follower count. Optimistic, rolls back on error. */
-export function FollowButton({ userId, initialFollowing, initialCount }: { userId: string; initialFollowing: boolean; initialCount: number }) {
+export function FollowButton({ portfolioId, initialFollowing, initialCount }: { portfolioId: string; initialFollowing: boolean; initialCount: number }) {
   const router = useRouter();
   const [following, setFollowing] = useState(initialFollowing);
   const [count, setCount] = useState(initialCount);
@@ -19,7 +19,7 @@ export function FollowButton({ userId, initialFollowing, initialCount }: { userI
     setFollowing(next);
     setCount((c) => c + (next ? 1 : -1));
     start(async () => {
-      const res = next ? await followUser(userId) : await unfollowUser(userId);
+      const res = next ? await followPortfolio(portfolioId) : await unfollowPortfolio(portfolioId);
       if (!res.ok) {
         setFollowing(!next);
         setCount((c) => c + (next ? -1 : 1));
