@@ -259,6 +259,29 @@ Only the public Supabase URL/key and the Supabase secret key go in `folio/.env.l
 
 ---
 
+### Phase 7: Shariah screening (about 4.5 h, planned 17 Nov, not started)
+Decisions: shown on stock pages and in the holdings table; on by default with a switch to hide it; AAOIFI rules; no purification amounts yet.
+
+- **Task 24: Shariah data and storage (about 1.5 h).**
+  - New table `shariah_cache`: ticker, industry, total debt, cash plus short-term investments, market value, data date, result, reasons, and when it was updated. Every signed-in user can read it; only Edge Functions can write it.
+  - New column `profiles.show_shariah` (true by default).
+  - New `shariah` action in the `market` Edge Function: it gets the industry and balance sheet from Yahoo (assetProfile, fundamentalsTimeSeries balance sheet, price/market value), saves the result and reuses it for 7 days. It answers several tickers in one call.
+  - **Tests:** `market-check` gets new checks (AAPL and MSFT return figures, JPM is a bank, a second call is served from the cache, an unknown ticker returns a friendly "Not Screened"), plus an RLS check that users can't write to the table.
+- **Task 25: The rules, as pure tested code (about 1 h).**
+  - `lib/shariah.ts`: `screen(input)` returns { status, rules: [{ name, value, limit, pass }], note }. It holds the business lists (not allowed, mixed income), the 30% and 30% ratios, missing-data handling, the ETF and metals handling, and the Shariah ETF list.
+  - **Tests:** a bank → Not Compliant; a brewer → Not Compliant; a hotel → Doubtful; debt 35% → Not Compliant; debt 29.9% and cash 10% with an allowed business → Compliant; missing debt → Doubtful; SPY → Not Screened; SPUS → Compliant (Shariah ETF); GC=F → Not Screened.
+- **Task 26: Show it (about 1.5 h).**
+  - A reusable `ShariahBadge` component (emerald, amber, red or grey dot plus words, never colour alone) with an ⓘ details pop-over listing each rule as value vs limit and pass or fail, the data date and the scholar note.
+  - Stock page: the badge next to the name. Holdings table: a **Shariah** column, loaded with the valuation and streamed so it never slows the table.
+  - Settings: a **Show Shariah Screening** switch saved to `show_shariah`. When it's off, the badge and column are hidden.
+  - Friendly message if the data is slow: "Shariah data is still on its way from the exchange."
+- **Task 27: Test, deploy, check live, log (about 0.5 h).**
+  - Unit tests, type check, lint, build, `privacy-check` and `market-check`.
+  - On the live site: the badges on AAPL, JPM and a hotel stock; the holdings column on the demo account; switching it off and on in Settings; phone width.
+
+#### ✅ Checkpoint G
+Stock pages and the holdings table show correct badges for a mix of allowed, not-allowed, mixed and ETF tickers. The details box shows each rule with numbers and the note. The Settings switch hides and shows it. All tests pass on the live site.
+
 ## Suggested schedule
 | Block | Tasks | Goal |
 |---|---|---|

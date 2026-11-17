@@ -190,6 +190,30 @@ Opens when a ticker is clicked.
 - Metals appear as their own row ("Precious metals") in the sector weights table, with no stock-sector warning.
 - Performance and public portfolios include metals the same way as stocks (public view in % only).
 
+### 3.15 Shariah (Halal) Screening
+**Why:** many Muslim investors want to know whether a stock meets Islamic finance rules before they buy or keep it. Folio can show this as a guide.
+
+**Where it shows**
+- **Stock page:** a badge next to the name, either **Compliant**, **Doubtful**, **Not Compliant** or **Not Screened**. An ⓘ opens the details: each rule, the company's number, the limit, and pass or fail. It also shows the date of the financial data used.
+- **Holdings table:** a **Shariah** column with the same badge for every holding.
+- **On by default.** Users can hide it with a **Show Shariah Screening** switch in Settings. When it's hidden, the badge and the column disappear.
+
+**The rules (AAOIFI standard)**
+1. **Business activity:** the company fails if its main business is not allowed. That covers conventional banks and lenders, insurance, alcohol, tobacco, gambling and casinos, pork, and adult entertainment. Some businesses have mixed income (hotels, restaurants, airlines, entertainment, broad retailers); they are marked **Doubtful** instead of failing.
+2. **Interest-bearing debt** must be under **30%** of the company's market value.
+3. **Cash and interest-earning investments** must be under **30%** of the company's market value.
+4. **Non-halal income** must be under **5%** of total income. Free data doesn't split income this way, so the details say "Can't be checked with free data". This is one reason a result can be Doubtful.
+
+**How the result is decided**
+- **Not Compliant:** the business is not allowed, or rule 2 or 3 fails.
+- **Doubtful:** the business has mixed income, or some financial data is missing.
+- **Compliant:** the business is allowed and rules 2 and 3 pass.
+- **Not Screened:** ETFs and funds (Folio can't see what's inside them), except well-known Shariah ETFs such as SPUS, HLAL, SPSK, SPRE and UMMA, which show **Compliant (Shariah ETF)**. Gold and silver are also Not Screened in version 1.
+
+**Wording:** every details box ends with: "A screening guide based on AAOIFI rules and public data, not a religious ruling. Check with a qualified scholar."
+
+**Data:** company industry and balance-sheet figures (total debt, cash, short-term investments) and market value, all from Yahoo Finance for free. Results are saved for 7 days, because balance sheets only change each quarter.
+
 ### 3.12 About and Contact pages
 - **About page:** explains what Folio is for, who it helps, what it does and doesn't do (monitors, never trades or advises), and where the data comes from.
 - **Contact page:** Khaled Alzayed with the contact email (alzayed.k@yahoo.com, shown as a clickable email link).
@@ -317,6 +341,7 @@ docs/             this PRD and the build plan
 12. Every error and loading state uses a friendly finance message.
 13. About and Contact pages are reachable from the header and footer, also when logged out.
 14. All unit tests pass, the production build succeeds, and the app works on the live Vercel URL at desktop and phone width.
+15. Stock pages and the holdings table show a Shariah badge with rule-by-rule details. It is on by default, can be hidden in Settings, and always shows the "not a religious ruling" note.
 
 ---
 
@@ -328,6 +353,9 @@ docs/             this PRD and the build plan
 - Buy/sell recommendations or price predictions: legal and ethical reasons
 - Options, crypto, bonds and mutual-fund-only holdings: stocks and ETFs only for now
 - Tax reports: later
+- Dividend purification amounts (how much of each dividend to give to charity): later
+- Choosing between Shariah standards (DJIM, S&P): AAOIFI only for now
+- Shariah badges on public portfolios and in ticker search: later
 
 ---
 
