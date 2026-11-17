@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { Logo } from "./ui";
 import { UserMenu } from "./UserMenu";
-import { IconAI, IconBell, IconPerformance, IconPortfolio, IconPublic, IconReminders, IconTransactions } from "./icons";
+import { NotificationBell } from "./NotificationBell";
+import { IconAI, IconPerformance, IconPortfolio, IconPublic, IconReminders, IconTransactions } from "./icons";
 
 type Tab = { href: string; label: string; short: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
 
@@ -38,14 +39,7 @@ export function AppShell({
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              className="relative rounded-full p-2 text-muted hover:bg-brand-soft hover:text-brand"
-              aria-label="Notifications"
-              title="Notifications"
-            >
-              <IconBell className="h-6 w-6" />
-            </button>
+            <NotificationBell />
             <UserMenu displayName={displayName} avatarUrl={avatarUrl} />
           </div>
         </div>

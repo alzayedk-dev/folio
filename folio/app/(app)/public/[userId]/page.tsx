@@ -9,6 +9,7 @@ import { WarningBadge } from "@/components/WarningBadge";
 import { PublicReturnChart } from "@/components/PublicReturnChart";
 import { EmptyState } from "@/components/PagePlaceholder";
 import { Card } from "@/components/ui";
+import { FollowButton } from "@/components/FollowButton";
 
 export const metadata = { title: "Public Portfolio · Folio" };
 
@@ -16,6 +17,20 @@ export default async function PublicPortfolioPage({ params }: { params: Promise<
   const { userId } = await params;
   const supabase = await createClient();
   const p = await getPublic(supabase, userId);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isMe = user?.id === userId;
+  let following = false;
+  let followers = 0;
+  if (p) {
+    const [{ data: f }, { data: c }] = await Promise.all([
+      supabase.from("follows").select("followee_id").eq("followee_id", userId).maybeSingle(),
+      supabase.rpc("follower_count", { uid: userId }),
+    ]);
+    following = !!f;
+    followers = typeof c === "number" ? c : 0;
+  }
 
   return (
     <>
@@ -35,7 +50,11 @@ export default async function PublicPortfolioPage({ params }: { params: Promise<
                 <p className="mt-1 text-xs text-muted">Updated {new Date(p.updatedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
               </div>
             </div>
-            <div id="follow-slot" />
+            {isMe ? (
+              <p className="text-xs text-muted">This is your public page · {followers} follower{followers === 1 ? "" : "s"}</p>
+            ) : (
+              <FollowButton userId={userId} initialFollowing={following} initialCount={followers} />
+            )}
           </div>
 
           <section aria-label="Returns" className="grid grid-cols-2 gap-3 lg:grid-cols-4">

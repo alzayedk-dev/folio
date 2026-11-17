@@ -309,3 +309,35 @@ create policy "snapshots: owner all" on public.public_snapshots
   for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy "snapshots: read when public" on public.public_snapshots
   for select to authenticated using (public.is_public_user(user_id));
+
+-- ---------------------------------------------------------------
+-- Follows: only published portfolios can be followed; follower counts; alerts on buys/sells (no amounts)
+-- ---------------------------------------------------------------
+drop policy if exists "follows: follower adds" on public.follows;
+create policy "follows: follower adds" on public.follows
+  for insert to authenticated with check ((select auth.uid()) = follower_id and public.is_public_user(followee_id));
+create or replace function public.follower_count(uid uuid)
+returns integer language sql stable security definer set search_path = ''
+as $$ select case when public.is_public_user(uid) then (select count(*)::int from public.follows f where f.followee_id = uid) else 0 end; $$;
+revoke execute on function public.follower_count(uuid) from public, anon;
+grant execute on function public.follower_count(uuid) to authenticated;
+create or replace function public.notify_followers()
+returns trigger language plpgsql security definer set search_path = ''
+as $$
+declare owner_name text; owner_public boolean; asset text; verb text;
+begin
+  if new.type not in ('buy', 'sell') then return new; end if;
+  select p.display_name, p.is_public into owner_name, owner_public from public.profiles p where p.id = new.user_id;
+  if not coalesce(owner_public, false) then return new; end if;
+  asset := case new.ticker when 'GC=F' then 'Gold' when 'SI=F' then 'Silver' else new.ticker end;
+  verb := case new.type when 'buy' then 'bought' else 'sold' end;
+  insert into public.notifications (user_id, kind, title, body, link, dedupe_key)
+  select f.follower_id, 'follow', owner_name || ' ' || verb || ' ' || asset, 'A portfolio you follow made a change.',
+         '/public/' || new.user_id::text, 'follow:' || new.id::text || ':' || f.follower_id::text
+  from public.follows f where f.followee_id = new.user_id
+  on conflict (dedupe_key) do nothing;
+  return new;
+end; $$;
+revoke execute on function public.notify_followers() from public, anon, authenticated;
+create trigger on_transaction_notify_followers after insert on public.transactions
+  for each row execute function public.notify_followers();

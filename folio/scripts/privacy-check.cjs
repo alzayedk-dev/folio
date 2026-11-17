@@ -77,6 +77,34 @@ const check = (name, pass, detail) => results.push({ name, pass, detail });
     check("Unpublished snapshot is hidden immediately", (r.data?.length ?? 0) === 0);
     await admin.from("profiles").update({ is_public: true }).eq("id", aId);
   }
+  // Follows + alerts (only meaningful while A is public)
+  if (aProfile?.is_public) {
+    const [, bId] = await login("B");
+    await admin.from("follows").delete().eq("follower_id", bId).eq("followee_id", aId);
+    r = await B.from("follows").insert({ followee_id: aId });
+    check("B can follow A's public portfolio", !r.error, r.error?.message);
+    r = await B.from("follows").insert({ follower_id: aId, followee_id: bId });
+    check("B cannot create a follow on A's behalf", !!r.error);
+    const tx = await A.from("transactions").insert({ ticker: "ZZTEST", type: "buy", shares: 1, price: 1, currency: "USD" }).select().single();
+    r = await B.from("notifications").select("title, body, link").eq("kind", "follow").ilike("title", "%ZZTEST%");
+    check("B gets an alert when A buys", r.data?.length === 1, r.data?.[0]?.title);
+    check("The alert shows no amounts", !/[0-9]/.test((r.data?.[0]?.title ?? "") + (r.data?.[0]?.body ?? "")), r.data?.[0]?.title);
+    r = await A.from("notifications").select("id").eq("user_id", bId);
+    check("A cannot read B's alerts", (r.data?.length ?? 0) === 0);
+    r = await A.from("follows").select("follower_id").eq("followee_id", aId);
+    check("A cannot list who follows them", (r.data?.length ?? 0) === 0);
+    const { data: cnt } = await B.rpc("follower_count", { uid: aId });
+    check("Follower count works (number only)", typeof cnt === "number" && cnt >= 1, cnt);
+    // cleanup this part
+    if (tx.data) await admin.from("transactions").delete().eq("id", tx.data.id);
+    await admin.from("notifications").delete().eq("user_id", bId).ilike("title", "%ZZTEST%");
+    await B.from("follows").delete().eq("followee_id", aId);
+    // A private → B cannot follow
+    await admin.from("profiles").update({ is_public: false }).eq("id", aId);
+    r = await B.from("follows").insert({ followee_id: aId });
+    check("Private portfolios can't be followed", !!r.error);
+    await admin.from("profiles").update({ is_public: true }).eq("id", aId);
+  }
   r = await B.from("transactions").select("id").eq("user_id", aId);
   check("Publishing never exposes A's transactions", (r.data?.length ?? 0) === 0);
 
