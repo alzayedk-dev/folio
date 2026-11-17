@@ -252,3 +252,14 @@ Keys go in `folio/.env.local`, which is never committed.
 2. New users enter a starting cash balance and currency at sign-up (Task 3). ✅
 3. The app folder is `folio/`. ✅
 4. iPhone push only after "Add to Home Screen": waiting for confirmation.
+
+---
+
+## Progress log (updated after every task and checkpoint)
+
+| Task / checkpoint | Status | Tests run and results |
+|---|---|---|
+| Task 1: Project setup | ✅ Done 17 Nov | `npm run build` passed; `npm test` runs; theme loads |
+| Task 2: Database + security | ✅ Done 17 Nov | Schema applied to Supabase. Two-user test: user B saw 0 of A's transactions and 0 cash rows, couldn't edit A's data, and saw only their own profile; duplicate display name got a suffix; starting cash saved (5000 EUR); base currency defaults to USD. Test data rolled back (0 rows left). Supabase security advisor: 0 issues. Build + lint passed. |
+| Task 3: Login pages + app shell | ⏳ Next | |
+| **Checkpoint A** | ⏳ After Task 3 | Build + tests pass · sign up / log in / log out in the browser · two-user privacy check through the real app |
