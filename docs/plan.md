@@ -2,13 +2,31 @@
 
 Source: [docs/prd.md](prd.md) · Written 17 Nov 2026 · About 48 hours to submission
 
+## Change on 17 Nov: secret keys in Supabase Edge Functions
+At your request, all code that uses secret keys runs in **Supabase Edge Functions**, not in Next.js API routes on Vercel. The tasks stay the same, but these parts move:
+
+| Task | Was (Next.js on Vercel) | Now (Supabase Edge Function) |
+|---|---|---|
+| 4–5 Market data + caching + currency | `lib/market/*`, `app/api/search|quote|history` | `supabase/functions/market/` (search, quote, profile, history, earnings, fx) |
+| 12 Performance data | `app/api/performance` | uses the stored history from the `market` function; the maths stays in `lib/performance.ts` (tested with Vitest) |
+| 14 News | `app/api/news` | `market` function (news action) |
+| 18 AI | `app/api/ai` | `supabase/functions/ai/` |
+| 19 Daily job | Vercel cron | `supabase/functions/daily/`, scheduled with pg_cron |
+| 20 Email | `lib/email.ts` | inside the `daily` and `notify` functions |
+| 21 Push | `lib/push.ts` | `supabase/functions/notify/` |
+
+- **Keys:** Finnhub, OpenRouter, Resend and push keys are pasted into **Supabase → Edge Functions → Secrets**. They are not needed in `.env.local` or Vercel.
+- **Login check:** every function checks the user's login token first; anonymous calls are refused.
+- **First test (risk):** Yahoo's library must work inside Edge Functions. This is tested before anything else in Task 4. If it fails, the function calls Yahoo's public data directly instead.
+- **Extra time:** about 3–4 hours, taken from the buffer.
+
 ## Overview
 We build Folio in **thin working slices**: each task ends with something you can click and test. The riskiest part (stock data from Finnhub and Yahoo) comes early, so problems show up while there is still time to fix them. We **deploy to Vercel early** (after the core features) and redeploy after every phase, so a working live URL always exists.
 
 Total estimate: **about 32 hours of building**, plus a buffer for testing and sleep. If time runs short, cut in this order: **phone push → email alerts → stock-page news → best/worst day stats**.
 
 ## Key decisions
-- **Next.js server routes hold every API key.** The browser only talks to our own `/api/...` routes, never directly to Finnhub, Yahoo, OpenRouter or Resend.
+- **Supabase Edge Functions hold every secret key.** The browser and the Next.js site only call our own Edge Functions, never Finnhub, Yahoo, OpenRouter or Resend directly.
 - **Supabase row-level security (RLS) on every table.** Private data is readable only by its owner. Public portfolios are exposed only through a database function that returns **% figures**, never dollars or share counts.
 - **Holdings are calculated from transactions**, not stored. This keeps them always correct after any edit or delete.
 - **One market-data adapter** (`lib/market/`): Finnhub for US stocks, Yahoo for international stocks and all price history, each falling back to the other. Prices are cached for 60 s; history is stored permanently.
@@ -20,12 +38,12 @@ Total estimate: **about 32 hours of building**, plus a buffer for testing and sl
 | When | Account | What I need from you |
 |---|---|---|
 | Before Task 2 | Supabase | A project's URL + anon key + service-role key (or let me create the project with the connected Supabase tools) |
-| Before Task 4 | Finnhub | Your existing key |
+| Before Task 4 | Finnhub | Paste your key into Supabase → Edge Functions → Secrets |
 | Before Task 11 | Vercel | Log in and connect the project (I'll guide you) |
-| Before Task 18 | OpenRouter | Your existing key |
-| Before Task 20 | Resend | A free account + API key |
+| Before Task 18 | OpenRouter | Paste your key into Supabase Edge Function secrets |
+| Before Task 20 | Email | Account + key, pasted into Supabase Edge Function secrets |
 
-Keys go in `folio/.env.local`, which is never committed.
+Only the public Supabase URL/key and the Supabase secret key go in `folio/.env.local` (never committed). All other secret keys live in Supabase Edge Function secrets.
 
 ---
 
@@ -261,5 +279,6 @@ Keys go in `folio/.env.local`, which is never committed.
 |---|---|---|
 | Task 1: Project setup | ✅ Done 17 Nov | `npm run build` passed; `npm test` runs; theme loads |
 | Task 2: Database + security | ✅ Done 17 Nov | Schema applied to Supabase. Two-user test: user B saw 0 of A's transactions and 0 cash rows, couldn't edit A's data, and saw only their own profile; duplicate display name got a suffix; starting cash saved (5000 EUR); base currency defaults to USD. Test data rolled back (0 rows left). Supabase security advisor: 0 issues. Build + lint passed. |
+| Edge Functions risk test | ✅ Done 17 Nov | Test function deployed to Supabase. Yahoo works there: search ("eli lilly" → LLY), quotes for AAPL, VOD.L (London), 7203.T (Tokyo), 2222.SR (Saudi), 1-month history, sector/industry, earnings date and GBP→USD rate all returned in 100–750 ms. Note: London prices come in pence (GBp), so the adapter must divide by 100. |
 | Task 3: Login pages + app shell | ⏳ Next | |
 | **Checkpoint A** | ⏳ After Task 3 | Build + tests pass · sign up / log in / log out in the browser · two-user privacy check through the real app |

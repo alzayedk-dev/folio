@@ -220,11 +220,13 @@ Every loading, error, wrong-input and busy-server message is friendly and uses f
 | Exchange rates | Free exchange-rate API (open.er-api.com), with Yahoo as backup |
 | AI chat | OpenRouter free models |
 | Email | Resend (free plan) |
-| Hosting + daily scheduled job | Vercel (free plan) |
+| Hosting the website | Vercel (free plan) |
+| Server code that holds the secret keys, plus the daily job | Supabase Edge Functions + scheduler (pg_cron), free plan |
 
 - **Fallback:** if one source fails, Folio tries the other, then shows the last saved price with a friendly note.
 - **Saving data:** live prices are kept for about 60 seconds and shared by all users. Price history is saved permanently and topped up daily. This keeps us inside free limits.
 - **One adapter:** all market-data code sits in one place, so a paid provider can replace Yahoo later.
+- **Secret keys live only in Supabase** (Edge Function secrets). The website on Vercel holds no secret keys; it calls the Edge Functions, which check who the user is before doing anything.
 
 ---
 
@@ -235,7 +237,8 @@ Every loading, error, wrong-input and busy-server message is friendly and uses f
 - **Recharts** for charts
 - **yahoo-finance2**, Finnhub REST, OpenRouter, Resend, **web-push**
 - **Vitest** for tests of the number rules
-- **Vercel** for hosting and the daily scheduled job (earnings reminders)
+- **Supabase Edge Functions** (Deno) for all code that uses secret keys: market data, AI, email, push, and the daily job (run by pg_cron)
+- **Vercel** for hosting the website
 
 **Commands** (run inside `folio/`):
 ```
