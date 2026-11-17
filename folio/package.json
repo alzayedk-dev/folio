@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run --passWithNoTests",
     "privacy": "node scripts/privacy-check.cjs",
-    "market-check": "node scripts/market-check.cjs"
+    "market-check": "node scripts/market-check.cjs",
+    "build:check": "cross-env NEXT_DIST_DIR=.next-build next build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -28,6 +29,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.29",
     "tailwindcss": "^4",

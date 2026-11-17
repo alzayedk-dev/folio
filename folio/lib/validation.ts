@@ -18,6 +18,55 @@ export const signUpSchema = z
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
 
+// ---------- transactions ----------
+export const txnMessages = {
+  ticker: "Pick a stock from the list first.",
+  shares: "Enter how many shares (more than 0).",
+  price: "Enter the price per share (0 or more).",
+  amount: "Enter the dividend amount you received (more than 0).",
+  fees: "Fees can't be negative.",
+  date: "Pick a trade date that isn't in the future.",
+  notes: "Notes can be up to 500 characters.",
+} as const;
+
+/** Latest date allowed: today, plus one day of slack for time zones ahead of the server. */
+export function latestTradeDate(now = new Date()): string {
+  return new Date(now.getTime() + 864e5).toISOString().slice(0, 10);
+}
+
+const num = (msg: string) => z.coerce.number({ message: msg }).refine(Number.isFinite, msg);
+
+export const transactionSchema = z
+  .object({
+    ticker: z.string().trim().toUpperCase().regex(/^[A-Z0-9][A-Z0-9.\-=^]{0,19}$/, txnMessages.ticker),
+    type: z.enum(["buy", "sell", "dividend"]),
+    shares: z.union([z.literal(""), z.null(), num(txnMessages.shares)]).optional(),
+    price: z.union([z.literal(""), z.null(), num(txnMessages.price)]).optional(),
+    amount: z.union([z.literal(""), z.null(), num(txnMessages.amount)]).optional(),
+    fees: z.union([z.literal(""), z.null(), num(txnMessages.fees)]).optional(),
+    tradeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, txnMessages.date),
+    notes: z.string().trim().max(500, txnMessages.notes).optional().default(""),
+  })
+  .transform((v) => ({
+    ...v,
+    shares: v.shares === "" || v.shares == null ? null : Number(v.shares),
+    price: v.price === "" || v.price == null ? null : Number(v.price),
+    amount: v.amount === "" || v.amount == null ? null : Number(v.amount),
+    fees: v.fees === "" || v.fees == null ? 0 : Number(v.fees),
+  }))
+  .superRefine((v, ctx) => {
+    if (v.tradeDate > latestTradeDate() || v.tradeDate < "1970-01-01") ctx.addIssue({ code: "custom", message: txnMessages.date, path: ["tradeDate"] });
+    if (v.fees < 0 || v.fees > 1e9) ctx.addIssue({ code: "custom", message: txnMessages.fees, path: ["fees"] });
+    if (v.type === "dividend") {
+      if (v.amount == null || !(v.amount > 0) || v.amount > 1e12) ctx.addIssue({ code: "custom", message: txnMessages.amount, path: ["amount"] });
+    } else {
+      if (v.shares == null || !(v.shares > 0) || v.shares > 1e9) ctx.addIssue({ code: "custom", message: txnMessages.shares, path: ["shares"] });
+      if (v.price == null || v.price < 0 || v.price > 1e9) ctx.addIssue({ code: "custom", message: txnMessages.price, path: ["price"] });
+    }
+  });
+
+export type TransactionInput = z.infer<typeof transactionSchema>;
+
 /** Only allow redirects to our own pages (prevents open redirects via ?next=). */
 export function safeNext(next: string | null | undefined, fallback = "/portfolio"): string {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;
