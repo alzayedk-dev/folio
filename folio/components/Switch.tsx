@@ -8,6 +8,7 @@ export function Switch({
   label,
   description,
   disabled,
+  badge,
 }: {
   name: string;
   checked: boolean;
@@ -15,11 +16,16 @@ export function Switch({
   label: string;
   description?: string;
   disabled?: boolean;
+  /** Small label next to the title, e.g. "Coming Soon" */
+  badge?: string;
 }) {
   return (
     <div className="flex items-start justify-between gap-4 py-3">
       <div>
-        <p className="text-sm font-medium">{label}</p>
+        <p className="text-sm font-medium">
+          {label}
+          {badge && <span className="ml-2 rounded bg-surface px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">{badge}</span>}
+        </p>
         {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
       </div>
       <button

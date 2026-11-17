@@ -14,7 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Folio",
-  description: "Track your stocks, sectors and performance in one place.",
+  description: "Follow your stocks and precious metals, manage trades, and stay updated on your holdings.",
+  applicationName: "Folio",
+  appleWebApp: { capable: true, title: "Folio", statusBarStyle: "default" },
+  icons: { apple: "/icons/180" },
 };
 
 export const viewport: Viewport = {

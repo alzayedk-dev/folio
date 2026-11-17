@@ -5,17 +5,18 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
 const DELIVERABLES = [
-  "Every stock, ETF, gold and silver holding valued live",
-  "Profit and loss in $ or %, per position and in total",
-  "Sector concentration warnings before risk builds up",
-  "Performance since day one vs the S&P 500, Nasdaq and Dow",
+  "Follow your stocks, ETFs, gold and silver with live prices",
+  "Manage every buy, sell and dividend in seconds",
+  "Get the latest news and earnings dates for your holdings",
+  "Spot risky sector concentration before it builds up",
+  "Measure your returns against the S&P 500, Nasdaq and Dow",
 ];
 
 const FEATURES = [
   { title: "Live Holdings", text: "Prices fill in automatically for US and international stocks, plus gold and silver by the ounce or gram." },
   { title: "Sector Check-Up", text: "See your sector mix with clear 25% / 40% guideline markers and gentle warnings when one stock or sector gets heavy." },
   { title: "Performance Since Day One", text: "A time-weighted return chart that ignores deposits, compared with the S&P 500, Nasdaq 100 or Dow." },
-  { title: "Earnings Reminders", text: "Know 10 days and 1 day ahead when the companies you own report results." },
+  { title: "News And Earnings", text: "Latest headlines for every stock you own, plus reminders 10 days and 1 day before each company reports." },
   { title: "AI Analyst", text: "Ask about stocks, sectors and markets. It knows your mix in % terms, and it explains rather than advises." },
   { title: "Public Portfolios", text: "Publish your allocation in % only, follow investors you like and get an alert when they trade." },
 ];
@@ -119,13 +120,13 @@ export default async function Home() {
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:py-20 lg:grid-cols-2">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand-soft px-3 py-1 text-xs font-medium text-brand-strong">
-              Free portfolio tracker for self-directed investors
+              Built for investors who manage their own money
             </p>
             <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
-              See Your Whole Portfolio, <span className="text-brand">Clearly.</span>
+              Your Stocks. Your Gold. <span className="text-brand">One Clear View.</span>
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted">
-              Folio brings your stocks, gold, silver and cash from every broker into one calm dashboard, with live prices, honest performance and early warnings when your money gets too concentrated.
+              Follow every stock and precious metal you own, manage every trade in seconds, and stay ahead with live prices, news on your holdings and earnings alerts, all in one calm, professional dashboard.
             </p>
             <ul className="mt-6 space-y-2.5">
               {DELIVERABLES.map((d) => (
@@ -137,13 +138,13 @@ export default async function Home() {
             </ul>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/signup" className="rounded-lg bg-brand px-6 py-3 font-medium text-white shadow-sm hover:bg-brand-strong">
-                Open Your Free Folio
+                Start Tracking Free
               </Link>
               <Link href="/login" className="rounded-lg border border-brand px-6 py-3 font-medium text-brand hover:bg-brand-soft">
                 Log In
               </Link>
             </div>
-            <p className="mt-3 text-xs text-muted">No bank or broker connection needed. You stay in control of your data.</p>
+            <p className="mt-3 text-xs text-muted">Free to use · Set up in a minute · No broker connection needed</p>
           </div>
           <DashboardPreview />
         </section>
@@ -196,10 +197,10 @@ export default async function Home() {
 
         {/* Final call to action */}
         <section className="mx-auto max-w-6xl px-4 py-16 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Ready To See The Full Picture?</h2>
-          <p className="mt-2 text-muted">It takes about a minute to set up.</p>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Take Control Of Your Portfolio Today</h2>
+          <p className="mt-2 text-muted">Follow, manage and stay updated on everything you own, in about a minute.</p>
           <Link href="/signup" className="mt-6 inline-block rounded-lg bg-brand px-6 py-3 font-medium text-white hover:bg-brand-strong">
-            Open Your Free Folio
+            Start Tracking Free
           </Link>
         </section>
       </main>

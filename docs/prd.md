@@ -174,6 +174,7 @@ Opens when a ticker is clicked.
 - Unticking the checkbox hides the portfolio straight away.
 
 ### 3.10 Alerts
+> **Decision 17 Nov:** email and phone push are deferred ("Coming Soon" in Settings). Alerts are delivered in the in-app bell. Folio is installable on phones ("Add to Home Screen").
 - **In-app:** a bell icon with an unread count, plus a dropdown list.
 - **Email:** sent through Resend (free plan).
 - **Phone push:** browser/phone notifications through the PWA. *Cut first if time runs short.*

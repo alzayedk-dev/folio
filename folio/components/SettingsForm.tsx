@@ -194,8 +194,8 @@ export function SettingsForm({ profile }: { profile: SettingsProfile }) {
         <Section title="Alerts" description="Earnings reminders and updates from portfolios you follow.">
           <div className="divide-y divide-line">
             <Switch name="notifyInapp" label="In-App Alerts" description="The bell icon in the header." checked={toggles.notifyInapp} onChange={(v) => setToggles((t) => ({ ...t, notifyInapp: v }))} />
-            <Switch name="notifyEmail" label="Email Alerts" description={`Sent to ${profile.email}.`} checked={toggles.notifyEmail} onChange={(v) => setToggles((t) => ({ ...t, notifyEmail: v }))} />
-            <Switch name="notifyPush" label="Phone Push Alerts" description="Notifications on this device (set up in a later step)." checked={toggles.notifyPush} onChange={(v) => setToggles((t) => ({ ...t, notifyPush: v }))} />
+            <Switch name="notifyEmail" label="Email Alerts" badge="Coming Soon" description="Alerts by email are on the way. For now, they appear in the bell." checked={false} disabled onChange={() => undefined} />
+            <Switch name="notifyPush" label="Phone Push Alerts" badge="Coming Soon" description="Lock-screen notifications are on the way." checked={false} disabled onChange={() => undefined} />
           </div>
         </Section>
 
