@@ -10,13 +10,14 @@ const DELIVERABLES = [
   "Follow your stocks, ETFs, gold and silver with live prices",
   "Get the latest news and earnings dates for your holdings",
   "Spot risky sector concentration before it builds up",
+  "Ask the AI analyst anything about stocks, sectors and markets",
   "Track your returns against the S&P 500, Nasdaq and Dow",
 ];
 
 const FEATURES = [
   { title: "Live Holdings", text: "Prices fill in automatically for US and international stocks, plus gold and silver by the ounce or gram." },
   { title: "Sector Check-Up", text: "See your sector mix with clear 25% / 40% guideline markers and gentle warnings when one stock or sector gets heavy." },
-  { title: "Performance Since Day One", text: "A time-weighted return chart that ignores deposits, compared with the S&P 500, Nasdaq 100 or Dow." },
+  { title: "Performance", text: "A time-weighted return chart that ignores deposits, compared with the S&P 500, Nasdaq 100 or Dow." },
   { title: "News And Earnings", text: "Latest headlines for every stock you own, plus reminders 10 days and 1 day before each company reports." },
   { title: "AI Analyst", text: "Ask about stocks, sectors and markets. It knows your mix in % terms, and it explains rather than advises." },
   { title: "Public Portfolios", text: "Publish your allocation in % only, follow investors you like and get an alert when they trade." },
@@ -127,7 +128,7 @@ export default async function Home() {
               Your Stocks. Your Gold. <span className="text-brand">One Clear View.</span>
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted">
-              Follow every stock and precious metal you own, track your returns, and stay ahead with live prices, news on your holdings and earnings alerts, all in one calm dashboard.
+              Follow every stock and precious metal you own, track your returns, and stay ahead with live prices, news on your holdings and earnings alerts, all in one dashboard.
             </p>
             <ul className="mt-6 space-y-2.5">
               {DELIVERABLES.map((d) => (
@@ -185,7 +186,7 @@ export default async function Home() {
           <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 md:grid-cols-3">
             {[
               ["Private By Default", "Your data is locked to your account by the database itself. No one else can see it."],
-              ["Share Only %", "Publishing shows weights and returns in percentages, never amounts, share counts or cash."],
+              ["Share Your Holdings", "Publish your portfolio in percentages and let others follow you."],
               ["Monitors, Never Trades", "Folio doesn't connect to your broker, place trades or give buy/sell advice."],
             ].map(([t, d]) => (
               <div key={t}>
@@ -198,7 +199,7 @@ export default async function Home() {
 
         {/* Final call to action */}
         <section className="mx-auto max-w-6xl px-4 py-16 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Take Control Of Your Portfolio Today</h2>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Monitor Your Portfolio Today</h2>
           <p className="mt-2 text-muted">Follow your holdings, track your returns and stay updated, in about a minute.</p>
           <Link href="/signup" className="mt-6 inline-block rounded-lg bg-brand px-6 py-3 font-medium text-white hover:bg-brand-strong">
             Start Tracking Free

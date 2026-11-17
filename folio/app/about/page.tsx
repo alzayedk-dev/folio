@@ -36,7 +36,7 @@ const SECTIONS = [
 
 export default function AboutPage() {
   return (
-    <PublicPage title="About Folio" subtitle="One calm place for everything you invest in.">
+    <PublicPage title="About Folio" subtitle="One place for everything you invest in.">
       <div className="space-y-8">
         {SECTIONS.map((s) => (
           <section key={s.title}>

@@ -9,7 +9,7 @@ export function SiteFooter({ signedIn = false }: { signedIn?: boolean }) {
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-sm">
           <Logo />
-          <p className="mt-2 text-sm text-muted">Track your stocks, precious metals and cash in one calm, simple place.</p>
+          <p className="mt-2 text-sm text-muted">Track your stocks, precious metals and cash in one simple place.</p>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm">
           <Link href="/about" className="py-1 text-muted hover:text-brand">About</Link>
