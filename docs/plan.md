@@ -1,0 +1,254 @@
+# Folio: Build Plan
+
+Source: [docs/prd.md](prd.md) · Written 17 Nov 2026 · About 48 hours to submission
+
+## Overview
+We build Folio in **thin working slices**: each task ends with something you can click and test. The riskiest part (stock data from Finnhub and Yahoo) comes early, so problems show up while there is still time to fix them. We **deploy to Vercel early** (after the core features) and redeploy after every phase, so a working live URL always exists.
+
+Total estimate: **about 32 hours of building**, plus a buffer for testing and sleep. If time runs short, cut in this order: **phone push → email alerts → stock-page news → best/worst day stats**.
+
+## Key decisions
+- **Next.js server routes hold every API key.** The browser only talks to our own `/api/...` routes, never directly to Finnhub, Yahoo, OpenRouter or Resend.
+- **Supabase row-level security (RLS) on every table.** Private data is readable only by its owner. Public portfolios are exposed only through a database function that returns **% figures**, never dollars or share counts.
+- **Holdings are calculated from transactions**, not stored. This keeps them always correct after any edit or delete.
+- **One market-data adapter** (`lib/market/`): Finnhub for US stocks, Yahoo for international stocks and all price history, each falling back to the other. Prices are cached for 60 s; history is stored permanently.
+- **All number rules live in pure functions** (`lib/portfolio.ts`, `lib/performance.ts`) with unit tests, so they're correct before any screen uses them.
+- **Follow alerts are created by a database trigger** when a published user adds a transaction, so they can't be forgotten in the code.
+- **One daily Vercel cron job** creates the earnings reminders and sends email/push (the free plan allows one run a day).
+
+## Accounts you'll need (and when)
+| When | Account | What I need from you |
+|---|---|---|
+| Before Task 2 | Supabase | A project's URL + anon key + service-role key (or let me create the project with the connected Supabase tools) |
+| Before Task 4 | Finnhub | Your existing key |
+| Before Task 11 | Vercel | Log in and connect the project (I'll guide you) |
+| Before Task 18 | OpenRouter | Your existing key |
+| Before Task 20 | Resend | A free account + API key |
+
+Keys go in `folio/.env.local`, which is never committed.
+
+---
+
+## Task list
+
+### Phase 0: Foundation (about 3.5 h)
+
+**Task 1: Project setup** · S · 45 min
+- Install: `@supabase/supabase-js @supabase/ssr recharts yahoo-finance2 zod` + dev `vitest`. Re-run `npm install` to complete the interrupted setup.
+- Emerald/white theme colors in Tailwind; `.env.local.example` listing every key; `npm test` script.
+- **Accept:** `npm run dev` shows a white page with an emerald "Folio" heading; `npm test` runs.
+- **Verify:** `npm run build` and `npm test` both pass.
+- **Files:** `package.json`, `app/globals.css`, `vitest.config.ts`, `.env.local.example`, `app/page.tsx`
+- **Depends on:** none
+
+**Task 2: Database + security rules** · M · 1.5 h
+- `supabase/schema.sql`: tables `profiles`, `transactions`, `cash_entries`, `symbols`, `quote_cache`, `price_history`, `fx_rates`, `follows`, `notifications`, `push_subscriptions`, `ai_messages`; RLS policies on every table; auto-create a profile on sign-up.
+- Supabase clients for the browser and the server; middleware that sends logged-out users to `/login`.
+- **Accept:** schema applied to Supabase; a table query as user A returns none of user B's rows.
+- **Verify:** run the RLS check queries in the Supabase SQL editor (two test users).
+- **Files:** `supabase/schema.sql`, `lib/supabase/client.ts`, `lib/supabase/server.ts`, `middleware.ts`
+- **Depends on:** 1
+
+**Task 3: Login pages + app shell** · M · 1.5 h
+- Sign up (including a starting cash amount + currency), log in, forgot password. Header with logo, bell placeholder and Settings menu (avatar). Emerald top tab bar on desktop, bottom icon bar on phones. Friendly messages file.
+- **Accept:** sign up → land on an empty Portfolio tab showing "Your portfolio is a blank ledger…"; tabs switch pages; phone width shows the bottom bar.
+- **Verify:** click through in the browser at desktop and 375 px width.
+- **Files:** `app/(auth)/login/page.tsx`, `app/(auth)/signup/page.tsx`, `app/(app)/layout.tsx`, `components/AppShell.tsx`, `lib/messages.ts`
+- **Depends on:** 2
+
+#### ✅ Checkpoint A
+- [ ] Build and tests pass · [ ] sign up / log in / log out works · [ ] two users can't see each other's rows
+
+### Phase 1: Market data, the riskiest part (about 3 h)
+
+**Task 4: Market-data adapter + sectors** · M · 1.5 h
+- `lib/market/` with `search`, `quote`, `profile`, `history`, `earnings`: Finnhub first for US stocks, Yahoo for international stocks and history, fallback both ways, friendly errors.
+- `lib/sectors.ts` maps Finnhub/Yahoo industry names to the 9 sectors + Other, with unit tests.
+- **Accept:** returns correct data for AAPL, LLY, VOD.L (London), 7203.T (Tokyo), 2222.SR (Saudi).
+- **Verify:** `npm test` (sector tests) + a quick script calling each function for those 5 tickers.
+- **Files:** `lib/market/finnhub.ts`, `lib/market/yahoo.ts`, `lib/market/index.ts`, `lib/sectors.ts`, `lib/__tests__/sectors.test.ts`
+- **Depends on:** 1
+
+**Task 5: Data API routes + caching + currency** · M · 1.5 h
+- `/api/search`, `/api/quote`, `/api/history`. 60 s quote cache and stored price history in Supabase. `lib/fx.ts` for exchange rates (open.er-api.com, Yahoo as backup), cached daily.
+- **Accept:** a second `/api/quote?symbols=AAPL` within 60 s doesn't call Finnhub; history is downloaded only once per ticker; 1 GBP converts to USD correctly.
+- **Verify:** call the routes in the browser; check the `quote_cache` and `price_history` rows in Supabase.
+- **Files:** `app/api/search/route.ts`, `app/api/quote/route.ts`, `app/api/history/route.ts`, `lib/fx.ts`, `lib/market/cache.ts`
+- **Depends on:** 2, 4
+
+#### ✅ Checkpoint B
+- [ ] Quotes and history work for the US, London, Tokyo and Saudi test tickers · [ ] fallback works when one source is switched off
+
+### Phase 2: Core portfolio (about 8 h)
+
+**Task 6: Number engine** · S · 1.5 h
+- `lib/portfolio.ts`: shares owned, average cost, realized P/L, proceeds, cash from sells/dividends, auto-deposit when a buy exceeds cash, value, % of portfolio, sector sums, stock warnings (10/20%) and sector warnings (25/40%), currency conversion.
+- **Accept:** every rule in PRD section 4 has a test, including the worked example (Technology 60 / Financials & Real Estate 20 / Energy 20).
+- **Verify:** `npm test`
+- **Files:** `lib/portfolio.ts`, `lib/__tests__/portfolio.test.ts`
+- **Depends on:** 1
+
+**Task 7: Transaction pop-up** · M · 2 h
+- Ticker search box with suggestions → pop-up with Buy/Sell/Dividend, shares, price, date, fees, notes; shows the current price; for a sell, shows proceeds and realized P/L live. Input checks (no future dates, no selling more than owned). Saving stores the transaction and the stock's profile/sector.
+- **Accept:** typing "lly" shows Eli Lilly; saving a buy creates a row in Supabase; an invalid input shows a friendly message.
+- **Verify:** manual test in the browser + check the row in Supabase.
+- **Files:** `components/TickerSearch.tsx`, `components/TransactionModal.tsx`, `app/(app)/actions/transactions.ts`, `lib/validation.ts`
+- **Depends on:** 3, 5, 6
+
+**Task 8: Holdings table + summary cards** · M · 2 h
+- Portfolio tab: summary cards, holdings table with every PRD 3.4 column, $/% toggle, sortable columns, totals row, warning badges. Stacked cards on phones.
+- **Accept:** after buying AAPL and LLY, both rows show the correct values; the % column adds up to 100% (with cash); the toggle switches P/L and day change.
+- **Verify:** compare against a hand calculation; check at phone width.
+- **Files:** `app/(app)/portfolio/page.tsx`, `components/HoldingsTable.tsx`, `components/SummaryCards.tsx`, `lib/loadPortfolio.ts`
+- **Depends on:** 7
+
+**Task 9: Sector table + donut + cash card** · M · 1.5 h
+- Sector table with thresholds and warnings, Recharts donut, cash card (add/edit balances in any currency; edits recorded as deposits/withdrawals).
+- **Accept:** sector weights add up to 100%; a sector above 40% shows 🔴; editing cash updates the totals.
+- **Verify:** manual check with a tech-heavy test portfolio.
+- **Files:** `components/SectorTable.tsx`, `components/SectorDonut.tsx`, `components/CashCard.tsx`, `app/(app)/actions/cash.ts`
+- **Depends on:** 8
+
+**Task 10: Transactions tab** · S · 1 h
+- List of all transactions with filters, edit (reuses the pop-up) and delete with confirmation.
+- **Accept:** editing or deleting a transaction updates holdings and cash right away.
+- **Verify:** manual test.
+- **Files:** `app/(app)/transactions/page.tsx`, `components/TransactionList.tsx`
+- **Depends on:** 7
+
+**Task 11: First deploy to Vercel** · S · 45 min
+- Connect the repo/folder to Vercel, set environment variables, deploy.
+- **Accept:** the live URL works for sign-up → add a transaction → see holdings.
+- **Verify:** test on the live URL from a phone.
+- **Files:** `next.config.ts` (if needed), `vercel.json`
+- **Depends on:** 8
+
+#### ✅ Checkpoint C: the core is demo-able
+- [ ] Tests and build pass · [ ] full flow works on the live URL · [ ] **Review with you before continuing**
+
+### Phase 3: Performance + stock page (about 5 h)
+
+**Task 12: Performance engine** · M · 2 h
+- `lib/performance.ts`: daily portfolio value from transactions × stored closing prices × exchange rates + cash; time-weighted return that ignores deposits/withdrawals; benchmark series (SPY / QQQ / DIA) rebased to the same start; best and worst day.
+- **Accept:** tests prove a deposit doesn't count as a gain and that the ranges (1M…All) cut the series correctly.
+- **Verify:** `npm test`
+- **Files:** `lib/performance.ts`, `lib/__tests__/performance.test.ts`, `app/api/performance/route.ts`
+- **Depends on:** 5, 6
+
+**Task 13: Performance tab** · S · 1.5 h
+- Line chart, range buttons, $/% toggle, "My portfolio / vs S&P 500 / Nasdaq 100 / Dow" dropdown, summary under the chart.
+- **Accept:** every range and toggle works; the benchmark line appears only in "vs" mode.
+- **Verify:** manual test with back-dated transactions from about 1 year ago.
+- **Files:** `app/(app)/performance/page.tsx`, `components/PerformanceChart.tsx`
+- **Depends on:** 12
+
+**Task 14: Stock page** · M · 1.5 h
+- `/stock/[ticker]`: header info, price chart with ranges, news, next earnings date, the user's position, "Add transaction" button.
+- **Accept:** works for AAPL and VOD.L; missing news or earnings shows a friendly "not available" message.
+- **Verify:** manual test.
+- **Files:** `app/(app)/stock/[ticker]/page.tsx`, `components/PriceChart.tsx`, `app/api/news/route.ts`
+- **Depends on:** 5
+
+#### ✅ Checkpoint D
+- [ ] Tests and build pass · [ ] redeploy · [ ] performance numbers sanity-checked against a hand calculation
+
+### Phase 4: Settings + community (about 5 h)
+
+**Task 15: Settings** · M · 1.5 h
+- Profile (display name, full name, avatar upload to Supabase Storage, bio), base currency, alert toggles, "Publish my portfolio" checkbox (asks for a bio if empty).
+- **Accept:** changing the base currency to EUR converts every total; the avatar shows in the header.
+- **Verify:** manual test.
+- **Files:** `app/(app)/settings/page.tsx`, `components/SettingsForm.tsx`, `components/AvatarUpload.tsx`, `app/(app)/actions/profile.ts`
+- **Depends on:** 8
+
+**Task 16: Public portfolios** · M · 2 h
+- Secure database function returning **% only** data for published users. Public tab list + public portfolio page (holdings %, sectors, % performance chart).
+- **Accept:** a published portfolio shows no $, share counts or cash anywhere, including in the raw API response; unpublishing hides it straight away.
+- **Verify:** two-user test + inspect the network responses in the browser.
+- **Files:** `supabase/schema.sql` (function), `app/(app)/public/page.tsx`, `app/(app)/public/[userId]/page.tsx`, `app/api/public/route.ts`
+- **Depends on:** 12, 15
+
+**Task 17: Follow + bell alerts** · M · 1.5 h
+- Follow/unfollow button; database trigger that creates follower notifications on a new transaction ("TechBull88 bought LLY", with no amounts); bell with unread count and dropdown; mark as read.
+- **Accept:** user B follows A; A buys a stock; B's bell shows 1 new alert.
+- **Verify:** two-browser test.
+- **Files:** `supabase/schema.sql` (trigger), `components/FollowButton.tsx`, `components/NotificationBell.tsx`, `app/api/notifications/route.ts`
+- **Depends on:** 16
+
+#### ✅ Checkpoint E
+- [ ] Full two-user security test (private data hidden, public shows % only) · [ ] redeploy
+
+### Phase 5: AI, reminders, email, push (about 5.5 h)
+
+**Task 18: AI tab** · M · 1.5 h
+- Chat UI with saved history; server route sends the user's holdings (tickers, weights, sectors) + strict rules (stocks/sectors/markets only, no buy/sell, no predictions) to an OpenRouter free model; fallback model; friendly "analyst on a coffee break" message.
+- **Accept:** "What's my tech exposure?" uses real holdings; "Should I buy NVDA?" is politely declined; "Write me a poem" is declined.
+- **Verify:** manual test with those 3 prompts.
+- **Files:** `app/(app)/ai/page.tsx`, `components/ChatBox.tsx`, `app/api/ai/route.ts`, `lib/aiPrompt.ts`
+- **Depends on:** 8
+
+**Task 19: Reminders + daily job** · M · 1.5 h
+- Reminders tab listing upcoming earnings for held stocks; `/api/cron/daily` (protected by a secret) creates 10-day and 1-day notifications; scheduled in `vercel.json`.
+- **Accept:** calling the cron route manually creates the right notifications with no duplicates.
+- **Verify:** call the route manually; check the notifications.
+- **Files:** `app/(app)/reminders/page.tsx`, `app/api/cron/daily/route.ts`, `vercel.json`
+- **Depends on:** 5, 17
+
+**Task 20: Email alerts** · S · 1 h
+- Resend integration with a simple emerald email template; sent from the daily job and for follow alerts, if the user has email switched on.
+- **Accept:** a test user receives the earnings and follow emails.
+- **Verify:** check the inbox (and spam folder).
+- **Files:** `lib/email.ts`, `app/api/cron/daily/route.ts`
+- **Depends on:** 19
+
+**Task 21: PWA + push (cut first)** · M · 1.5 h
+- `manifest.json`, icons, service worker; push subscription saved per device; push sent alongside email.
+- **Accept:** Folio installs on Android/desktop Chrome; a test push arrives.
+- **Verify:** manual test on a phone.
+- **Files:** `public/manifest.json`, `public/sw.js`, `lib/push.ts`, `components/PushToggle.tsx`
+- **Depends on:** 19
+
+#### ✅ Checkpoint F
+- [ ] All PRD features present · [ ] redeploy
+
+### Phase 6: Polish + submit (about 2.5 h)
+
+**Task 22: Friendly states + phone pass** · S · 1.5 h
+- Go through every loading, empty, error and "delisted" state; check every tab at 375 px; accessibility basics (labels, contrast, keyboard).
+- **Accept:** no raw error text anywhere; nothing overflows on a phone.
+- **Files:** `app/not-found.tsx`, `app/error.tsx`, plus small edits across components
+
+**Task 23: Final verification + demo account** · S · 1 h
+- Run the 13 "done" checks in PRD section 9 on the live URL; create a demo account with a realistic portfolio (US + 1–2 international stocks, about 1 year of history) and one published portfolio to follow.
+- **Accept:** all 13 checks pass; the demo account is ready for the presentation.
+
+#### ✅ Checkpoint: Done
+- [ ] `npm test`, `npm run lint` and `npm run build` pass · [ ] live URL fully tested · [ ] ready to submit
+
+---
+
+## Suggested schedule
+| Block | Tasks | Goal |
+|---|---|---|
+| Today, session 1 | 1–5 | Login + live stock data working |
+| Today, session 2 | 6–11 | Core portfolio live on Vercel |
+| Tomorrow, session 1 | 12–17 | Performance, stock pages, community |
+| Tomorrow, session 2 | 18–21 | AI, reminders, alerts |
+| Final hours | 22–23 | Polish, test, demo account, submit |
+
+## Risks and mitigations
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Yahoo (unofficial) slows down or breaks | High | Finnhub fallback for US stocks, stored history, last-price display, demo mostly with US stocks |
+| Free API limits during the demo | Medium | 60 s quote cache shared by all users; history stored once |
+| Performance math wrong (cash flows, currency) | High | Pure functions with unit tests before any UI |
+| Public portfolio leaks $ amounts | High | Only a % database function is exposed; network-response check in Task 16 |
+| OpenRouter free model busy or removed | Medium | Configurable model + fallback model + friendly message |
+| Running out of time | High | Cut order: push → email → news → best/worst day; deploy after every phase |
+| Email lands in spam | Low | Test early; note it in the demo |
+
+## Decisions (from the PRD)
+1. A buy larger than available cash: the gap counts as new money deposited. ✅
+2. New users enter a starting cash balance and currency at sign-up (Task 3). ✅
+3. The app folder is `folio/`. ✅
+4. iPhone push only after "Add to Home Screen": waiting for confirmation.
