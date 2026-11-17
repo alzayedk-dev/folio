@@ -14,7 +14,7 @@ const RESULT: Record<RuleResult, { icon: string; text: string; label: string }> 
   pass: { icon: "✓", text: "text-gain", label: "Pass" },
   fail: { icon: "✕", text: "text-loss", label: "Fail" },
   doubtful: { icon: "?", text: "text-warn", label: "Doubtful" },
-  unknown: { icon: "–", text: "text-muted", label: "Not checked" },
+  unknown: { icon: "–", text: "text-muted", label: "" },
 };
 
 const PANEL_W = 320;
@@ -99,7 +99,13 @@ export function ShariahBadge({ result, size = "sm" }: { result: ShariahResult; s
                     <span className="min-w-0">
                       <span className="block font-medium">{r.name}</span>
                       <span className="block text-muted">
-                        {r.value} · Limit: {r.limit} · <span className={x.text}>{x.label}</span>
+                        {r.value} · Limit: {r.limit}
+                        {x.label && (
+                          <>
+                            {" · "}
+                            <span className={x.text}>{x.label}</span>
+                          </>
+                        )}
                       </span>
                     </span>
                   </li>

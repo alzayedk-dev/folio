@@ -98,7 +98,7 @@ export function businessCheck(ticker: string, industry: string | null, yahooSect
   const ind = (industry ?? "").trim().toLowerCase();
   if (!ind) {
     if ((yahooSector ?? "").toLowerCase() === "financial services") return { result: "doubtful", value: "Financial services (type unknown)" };
-    return { result: "unknown", value: "Industry not available" };
+    return { result: "unknown", value: "Information not available" };
   }
   if (NOT_ALLOWED.has(ind) || NOT_ALLOWED_WORDS.test(ind)) return { result: "fail", value: industry! };
   if (MIXED.has(ind) || isReit(ind)) return { result: "doubtful", value: `${industry} (mixed income)` };
@@ -107,7 +107,7 @@ export function businessCheck(ticker: string, industry: string | null, yahooSect
 
 function ratioRule(key: "debt" | "cash", name: string, part: number | null, cap: number | null, limit: number): ShariahRule {
   const limitText = `Under ${pct(limit).replace(".0", "")}`;
-  if (part == null || cap == null || cap <= 0) return { key, name, value: "Not available", limit: limitText, result: "unknown" };
+  if (part == null || cap == null || cap <= 0) return { key, name, value: "Information not available", limit: limitText, result: "unknown" };
   const ratio = part / cap;
   return { key, name, value: pct(ratio), limit: limitText, result: ratio < limit ? "pass" : "fail" };
 }
@@ -138,7 +138,7 @@ export function screen(ticker: string, facts: ShariahFacts | null): ShariahResul
     { key: "business", name: "Business Activity", value: biz.value, limit: "Allowed business", result: biz.result },
     ratioRule("debt", "Interest-Bearing Debt ÷ Market Value", n(facts.total_debt), cap, DEBT_LIMIT),
     ratioRule("cash", "Cash & Interest-Earning Investments ÷ Market Value", n(facts.cash_investments), cap, CASH_LIMIT),
-    { key: "income", name: "Non-Halal Income ÷ Total Income", value: "Can't be checked with free data", limit: "Under 5%", result: "unknown" },
+    { key: "income", name: "Non-Halal Income ÷ Total Income", value: "Information not available", limit: "Under 5%", result: "unknown" },
   ];
   const [business, debt, cash] = rules;
 

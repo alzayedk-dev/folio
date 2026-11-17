@@ -201,7 +201,7 @@ Opens when a ticker is clicked.
 1. **Business activity:** the company fails if its main business is not allowed. That covers conventional banks and lenders, insurance, alcohol, tobacco, gambling and casinos, pork, and adult entertainment. Some businesses have mixed income (hotels, restaurants, airlines, entertainment, broad retailers); they are marked **Doubtful** instead of failing.
 2. **Interest-bearing debt** must be under **30%** of the company's market value.
 3. **Cash and interest-earning investments** must be under **30%** of the company's market value.
-4. **Non-halal income** must be under **5%** of total income. Free data doesn't split income this way, so the details say "Can't be checked with free data". This is one reason a result can be Doubtful.
+4. **Non-halal income** must be under **5%** of total income. This figure isn't published in the data Folio uses, so the details say "Information not available". This is one reason a result can be Doubtful.
 
 **How the result is decided**
 - **Not Compliant:** the business is not allowed, or rule 2 or 3 fails.
