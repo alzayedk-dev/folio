@@ -235,7 +235,7 @@ Only the public Supabase URL/key and the Supabase secret key go in `folio/.env.l
 ### Phase 6: Polish + submit (about 2.5 h)
 
 **Task 21b: About + Contact pages, footer** · S · 1 h
-- Public About page (what Folio is for) and Contact page (owner's name + alzayed.k@yahoo.com as a mailto link). Links in the header (desktop next to the bell, phone inside the account menu) and in a footer on every page incl. the landing page. Both open without login.
+- Public About page (what Folio is for) and Contact page (Khaled Alzayed + alzayed.k@yahoo.com as a mailto link). Links in the header (desktop next to the bell, phone inside the account menu) and in a footer on every page incl. the landing page. Both open without login.
 - **Accept:** links visible on desktop and phone, logged in and out; email link opens the mail app.
 - **Files:** `app/about/page.tsx`, `app/contact/page.tsx`, `components/SiteFooter.tsx`, `components/AppShell.tsx`, `middleware.ts`
 

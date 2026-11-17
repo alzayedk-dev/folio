@@ -182,7 +182,7 @@ Opens when a ticker is clicked.
 
 ### 3.12 About and Contact pages
 - **About page:** explains what Folio is for, who it helps, what it does and doesn't do (monitors, never trades or advises), and where the data comes from.
-- **Contact page:** the owner's name and email (alzayed.k@yahoo.com, shown as a clickable email link).
+- **Contact page:** Khaled Alzayed and his chosen email (alzayed.k@yahoo.com, shown as a clickable email link).
 - **Where the links appear:** in the **header** (desktop: next to the bell; phone: inside the account menu) and in a **footer** on every page, including the public landing page.
 - Both pages can be opened without logging in.
 
