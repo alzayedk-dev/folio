@@ -1,7 +1,7 @@
 import { LoginForm } from "./LoginForm";
 import { safeNext } from "@/lib/validation";
 
-export const metadata = { title: "Log in · Folio" };
+export const metadata = { title: "Log In · Folio" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; reset?: string }> }) {
   const { next, reset } = await searchParams;

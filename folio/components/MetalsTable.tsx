@@ -9,7 +9,7 @@ import { usePersistentState } from "./usePersistentState";
 import { InfoTip } from "./InfoTip";
 
 const UNITS = [
-  { value: "oz", label: "Troy oz" },
+  { value: "oz", label: "Troy Oz" },
   { value: "g", label: "Grams" },
 ] as const;
 const PL = [
@@ -60,7 +60,7 @@ export function MetalsTable({ metals, base }: { metals: HoldingRow[]; base: stri
             {metals.map((m) => (
               <tr key={m.ticker}>
                 <td className="sticky left-0 z-[1] bg-white px-3 py-3 shadow-[1px_0_0_var(--border)]">
-                  <Link href={`/stock/${encodeURIComponent(m.ticker)}`} className="block font-semibold hover:text-brand hover:underline">
+                  <Link href={`/stock/${encodeURIComponent(m.ticker)}`} className="block py-0.5 font-semibold hover:text-brand hover:underline">
                     {m.name}
                   </Link>
                   <span className="block text-xs text-muted">COMEX price{m.priceMissing || m.stale ? " (delayed)" : ""}</span>

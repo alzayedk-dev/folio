@@ -12,17 +12,17 @@ export function SiteFooter({ signedIn = false }: { signedIn?: boolean }) {
           <p className="mt-2 text-sm text-muted">Track your stocks, precious metals and cash in one calm, simple place.</p>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm">
-          <Link href="/about" className="text-muted hover:text-brand">About</Link>
-          <Link href="/contact" className="text-muted hover:text-brand">Contact</Link>
+          <Link href="/about" className="py-1 text-muted hover:text-brand">About</Link>
+          <Link href="/contact" className="py-1 text-muted hover:text-brand">Contact</Link>
           {signedIn ? (
             <>
-              <Link href="/portfolio" className="text-muted hover:text-brand">Portfolio</Link>
-              <Link href="/settings" className="text-muted hover:text-brand">Settings</Link>
+              <Link href="/portfolio" className="py-1 text-muted hover:text-brand">Portfolio</Link>
+              <Link href="/settings" className="py-1 text-muted hover:text-brand">Settings</Link>
             </>
           ) : (
             <>
-              <Link href="/login" className="text-muted hover:text-brand">Log In</Link>
-              <Link href="/signup" className="text-muted hover:text-brand">Sign Up</Link>
+              <Link href="/login" className="py-1 text-muted hover:text-brand">Log In</Link>
+              <Link href="/signup" className="py-1 text-muted hover:text-brand">Sign Up</Link>
             </>
           )}
         </nav>

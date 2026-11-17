@@ -92,7 +92,7 @@ async function RemindersContent() {
                 return (
                   <tr key={r.ticker}>
                     <td className="px-5 py-3">
-                      <Link href={`/stock/${encodeURIComponent(r.ticker)}`} className="block font-semibold hover:text-brand hover:underline">
+                      <Link href={`/stock/${encodeURIComponent(r.ticker)}`} className="block py-0.5 font-semibold hover:text-brand hover:underline">
                         {r.ticker}
                       </Link>
                       <span className="block max-w-[14rem] truncate text-xs text-muted">{r.name}</span>

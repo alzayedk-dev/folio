@@ -28,7 +28,7 @@ export default async function StockPage({ params }: Params) {
   if (!ticker) notFound();
   return (
     <>
-      <Link href="/portfolio" className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
+      <Link href="/portfolio" className="mb-4 inline-flex min-h-6 items-center gap-1 py-1 text-sm font-medium text-brand hover:underline">
         ← Back To Portfolio
       </Link>
       <Suspense
@@ -173,7 +173,7 @@ async function StockContent({ ticker }: { ticker: string }) {
             <ul className="divide-y divide-line">
               {news.slice(0, 6).map((n) => (
                 <li key={n.url} className="px-4 py-3 sm:px-5">
-                  <a href={n.url} target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-brand hover:underline">
+                  <a href={n.url} target="_blank" rel="noopener noreferrer" className="block py-0.5 font-medium text-foreground hover:text-brand hover:underline">
                     {n.title}
                   </a>
                   <p className="mt-0.5 text-xs text-muted">

@@ -23,8 +23,8 @@ type Sort = { key: SortKey; dir: 1 | -1 };
 function SortHeader({ k, sort, onSort, children, align = "right", sticky = false, info }: { k: SortKey; sort: Sort; onSort: (k: SortKey) => void; children: React.ReactNode; align?: "left" | "right"; sticky?: boolean; info?: string }) {
   const active = sort.key === k;
   return (
-    <th scope="col" aria-sort={active ? (sort.dir === 1 ? "ascending" : "descending") : "none"} className={`px-3 py-3 font-medium ${align === "left" ? "text-left" : "text-right"} ${sticky ? "sticky left-0 z-[1] bg-surface shadow-[1px_0_0_var(--border)]" : ""}`}>
-      <button type="button" onClick={() => onSort(k)} className={`inline-flex items-center gap-1 hover:text-brand ${active ? "text-brand" : ""}`}>
+    <th scope="col" aria-sort={active ? (sort.dir === 1 ? "ascending" : "descending") : "none"} className={`px-3 py-2 font-medium ${align === "left" ? "text-left" : "text-right"} ${sticky ? "sticky left-0 z-[1] bg-surface shadow-[1px_0_0_var(--border)]" : ""}`}>
+      <button type="button" onClick={() => onSort(k)} className={`inline-flex min-h-6 items-center gap-1 py-1 hover:text-brand ${active ? "text-brand" : ""}`}>
         {children}
         <span aria-hidden="true" className="text-[10px]">{active ? (sort.dir === 1 ? "▲" : "▼") : ""}</span>
       </button>
@@ -130,7 +130,7 @@ export function HoldingsTable({
             {sorted.map((h) => (
               <tr key={h.ticker}>
                 <td className="sticky left-0 z-[1] bg-white px-3 py-3 shadow-[1px_0_0_var(--border)]">
-                  <Link href={`/stock/${encodeURIComponent(h.ticker)}`} className="block font-semibold text-foreground hover:text-brand hover:underline">
+                  <Link href={`/stock/${encodeURIComponent(h.ticker)}`} className="block py-0.5 font-semibold text-foreground hover:text-brand hover:underline">
                     {h.ticker}
                   </Link>
                   <span className="block max-w-[7.5rem] truncate text-xs text-muted sm:max-w-[14rem]" title={h.name}>{h.name}</span>
@@ -154,7 +154,7 @@ export function HoldingsTable({
             {metalsValue > 0.005 && (
               <tr className="text-muted">
                 <td className="sticky left-0 z-[1] bg-white px-3 py-3 font-medium text-foreground shadow-[1px_0_0_var(--border)]">
-                  <a href="#metals-heading" className="hover:text-brand">Precious Metals</a>
+                  <a href="#metals-heading" className="inline-block py-1 hover:text-brand">Precious Metals</a>
                 </td>
                 <td colSpan={4} />
                 <td className="px-3 py-3 text-right font-medium text-foreground">{money(metalsValue, base)}</td>

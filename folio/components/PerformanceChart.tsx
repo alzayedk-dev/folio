@@ -73,9 +73,9 @@ export function PerformanceChart({
           <SegmentedToggle label="Show value in dollars or percent" value={showPct ? "pct" : "usd"} options={MODES} onChange={(v) => !comparing && setMode(v)} />
           <Select value={view} onChange={(e) => setView(e.target.value as typeof view)} aria-label="Compare with" className="w-auto py-1.5 text-xs">
             <option value="mine">My Portfolio</option>
-            <option value="SPY">vs S&amp;P 500</option>
-            <option value="QQQ">vs Nasdaq 100</option>
-            <option value="DIA">vs Dow Jones</option>
+            <option value="SPY">Vs. S&amp;P 500</option>
+            <option value="QQQ">Vs. Nasdaq 100</option>
+            <option value="DIA">Vs. Dow Jones</option>
           </Select>
         </div>
       </div>

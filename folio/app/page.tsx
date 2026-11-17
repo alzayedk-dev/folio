@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { PublicHeader } from "@/components/PublicHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
+export const metadata = { title: "Folio · Track Your Stocks And Precious Metals" };
+
 const DELIVERABLES = [
   "Follow your stocks, ETFs, gold and silver with live prices",
   "Get the latest news and earnings dates for your holdings",

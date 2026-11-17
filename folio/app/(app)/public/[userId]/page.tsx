@@ -34,7 +34,7 @@ export default async function PublicPortfolioPage({ params }: { params: Promise<
 
   return (
     <>
-      <Link href="/public" className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
+      <Link href="/public" className="mb-4 inline-flex min-h-6 items-center gap-1 py-1 text-sm font-medium text-brand hover:underline">
         ← Back To Public Portfolios
       </Link>
       {!p ? (

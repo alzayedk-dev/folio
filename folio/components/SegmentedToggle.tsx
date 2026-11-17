@@ -26,7 +26,7 @@ export function SegmentedToggle<T extends string>({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(o.value)}
-            className={`rounded-md font-medium ${pad} ${active ? "bg-brand text-white" : "text-muted hover:text-brand"}`}
+            className={`min-h-6 rounded-md font-medium ${pad} ${active ? "bg-brand text-white" : "text-muted hover:text-brand"}`}
           >
             {o.label}
           </button>

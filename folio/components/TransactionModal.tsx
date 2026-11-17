@@ -259,7 +259,7 @@ export function TransactionModal({
                 value={unit}
                 onChange={setUnit}
                 options={[
-                  { value: "oz", label: "Troy oz" },
+                  { value: "oz", label: "Troy Oz" },
                   { value: "g", label: "Grams" },
                 ]}
               />

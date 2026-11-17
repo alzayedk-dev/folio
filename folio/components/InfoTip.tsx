@@ -58,9 +58,11 @@ export function InfoTip({ text, label = "More info" }: { text: string; label?: s
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => !pinned && setOpen(false)}
-        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-current text-[10px] font-semibold leading-none text-muted hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+        className="group -m-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-muted hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
       >
-        i
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-current text-[10px] font-semibold leading-none" aria-hidden="true">
+          i
+        </span>
       </button>
       {open && pos && (
         <span
