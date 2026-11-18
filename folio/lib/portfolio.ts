@@ -102,14 +102,23 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
     }
   }
 
-  // Merge cash entries and trades into one timeline; cash entries first on the same day.
-  type Event = { date: string; order: number; tie: string; run: () => void };
+  // Merge cash entries and trades into one timeline. On the same day, things apply in the order they were
+  // recorded (so "my cash is now $10,000" entered after a buy comes after that buy). A deposit made for a buy
+  // paid with new money goes just before its own trade. Entries without a recorded time keep the old rule:
+  // cash first, then trades.
+  type Event = { date: string; order: number; at: number | null; tie: string; run: () => void };
   const events: Event[] = [];
+  const recorded = (s: string | null | undefined) => {
+    const ms = s ? Date.parse(s) : NaN;
+    return Number.isFinite(ms) ? ms : null;
+  };
+  const tradeTime = new Map(txns.map((t) => [t.id, recorded(t.createdAt)]));
 
   for (const c of cashEntries) {
     events.push({
       date: c.entryDate,
       order: 0,
+      at: c.txnId ? tradeTime.get(c.txnId) ?? recorded(c.createdAt) : recorded(c.createdAt),
       tie: (c.createdAt ?? "") + c.id,
       run: () => {
         if (c.kind === "starting" || c.kind === "balance") {
@@ -134,6 +143,7 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
     events.push({
       date: t.tradeDate,
       order: 1,
+      at: recorded(t.createdAt),
       tie: t.createdAt + t.id,
       run: () => {
         const p = (positions[t.ticker] ??= { ticker: t.ticker, currency: t.currency, shares: 0, costBasis: 0, avgCost: 0, realizedPL: 0, dividends: 0 });
@@ -169,7 +179,11 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
     });
   }
 
-  events.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.order - b.order || (a.tie < b.tie ? -1 : 1)));
+  events.sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+    if (a.at != null && b.at != null && a.at !== b.at) return a.at - b.at;
+    return a.order - b.order || (a.tie < b.tie ? -1 : 1);
+  });
   for (const e of events) e.run();
 
   return { positions, cash, sells, autoDeposits, netDeposited, problems };

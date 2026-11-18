@@ -313,3 +313,22 @@ describe("same-day cash entries", () => {
     expect(replayLedger([t], [dep, start]).cash.USD).toBeCloseTo(1000);
   });
 });
+
+describe("same-day order: as recorded", () => {
+  it("a cash balance entered after today's buys is the final balance (the $10,000 case)", () => {
+    const morning = { ...buy("KFH.KW", 500, 0.765, "2026-11-18", { currency: "USD" }), createdAt: "2026-11-18T07:39:12Z" };
+    const silver = { ...buy("SI=F", 6.4, 46.03, "2026-11-18"), createdAt: "2026-11-18T08:06:56.611Z" };
+    const silverDeposit = { id: "dep1", kind: "deposit" as const, amount: 6.4 * 46.03, currency: "USD", entryDate: "2026-11-18", createdAt: "2026-11-18T08:06:56.680Z", txnId: silver.id };
+    const balance = { id: "bal1", kind: "balance" as const, amount: 10000, currency: "USD", entryDate: "2026-11-18", createdAt: "2026-11-18T08:07:12Z" };
+    const start = { id: "s0", kind: "balance" as const, amount: 20000, currency: "USD", entryDate: "2026-11-17", createdAt: "2026-11-17T20:29:58Z" };
+    const l = replayLedger([morning, silver], [start, silverDeposit, balance]);
+    expect(l.cash.USD).toBeCloseTo(10000);
+  });
+  it("a new-money deposit always lands just before its own buy, even when cash is short", () => {
+    const t = { ...buy("AAPL", 2, 100, "2026-11-18"), createdAt: "2026-11-18T09:00:00.000Z" };
+    const dep = { id: "d", kind: "deposit" as const, amount: 200, currency: "USD", entryDate: "2026-11-18", createdAt: "2026-11-18T09:00:00.050Z", txnId: t.id };
+    const l = replayLedger([t], [dep]);
+    expect(l.cash.USD ?? 0).toBeCloseTo(0);
+    expect(l.autoDeposits).toHaveLength(0);
+  });
+});
