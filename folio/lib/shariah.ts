@@ -121,13 +121,65 @@ const notScreened = (ticker: string, summary: string): ShariahResult => ({
   dataDate: null,
 });
 
-/** Screens one stock. Pass `facts` = null when no data came back. */
-export function screen(ticker: string, facts: ShariahFacts | null): ShariahResult {
+// ---------- Islamic financial institutions ----------
+// Islamic banks and Takaful (Islamic insurance) companies work under their own Shariah supervisory boards.
+// Conventional "no banks / insurance" and debt-ratio rules don't apply to them: customer deposits and
+// financing are Shariah-structured, not interest-bearing debt.
+/** Well-known listed Islamic banks (Yahoo tickers). */
+export const ISLAMIC_BANK_TICKERS = new Set([
+  "KFH.KW", // Kuwait Finance House
+  "BOUBYAN.KW", // Boubyan Bank
+  "WARBABANK.KW", // Warba Bank
+  "KIB.KW", // Kuwait International Bank
+  "1120.SR", // Al Rajhi Bank
+  "1150.SR", // Alinma Bank
+  "1140.SR", // Bank Albilad
+  "1020.SR", // Bank AlJazira
+  "QIBK.QA", // Qatar Islamic Bank
+  "MARK.QA", // Masraf Al Rayan
+  "QIIK.QA", // Qatar International Islamic Bank
+  "DUKB.QA", // Dukhan Bank
+  "DIB.AE", // Dubai Islamic Bank
+  "ADIB.AE", // Abu Dhabi Islamic Bank
+]);
+const ISLAMIC_BANK_WORDS = /\bislamic\b|finance house|al ?rajhi|alinma|albilad|al ?jazira bank|bank al ?jazira|masraf al ?rayan|boubyan|warba bank|dukhan bank|\bshari'?a\b|\bshariah\b/i;
+const TAKAFUL_WORDS = /\btakaful\b/i;
+
+/** "bank" or "takaful" when this is an Islamic financial institution, otherwise null. */
+export function islamicFinance(ticker: string, name: string | null | undefined): "bank" | "takaful" | null {
+  if (ISLAMIC_BANK_TICKERS.has(ticker.toUpperCase())) return "bank";
+  if (name && TAKAFUL_WORDS.test(name)) return "takaful";
+  if (name && ISLAMIC_BANK_WORDS.test(name)) return "bank";
+  return null;
+}
+
+/**
+ * Screens one stock. Pass `facts` = null when no data came back. `name` (company name) lets Folio recognise
+ * Islamic banks and Takaful companies.
+ */
+export function screen(ticker: string, facts: ShariahFacts | null, name?: string | null): ShariahResult {
   const t = ticker.toUpperCase();
   if (SHARIAH_ETFS.has(t)) {
     return { ticker: t, status: "compliant", label: "Compliant (Shariah ETF)", summary: "This fund is screened by its own Shariah board.", rules: [], dataDate: null };
   }
   if (t.includes("=")) return notScreened(t, "Gold and silver aren't screened in this version.");
+  const islamic = islamicFinance(t, name);
+  if (islamic) {
+    const kind = islamic === "bank" ? "Islamic bank" : "Takaful (Islamic insurance) company";
+    const na = "Not applicable to Islamic financial institutions";
+    return {
+      ticker: t,
+      status: "compliant",
+      label: islamic === "bank" ? "Compliant (Islamic Bank)" : "Compliant (Takaful)",
+      summary: `An ${kind} supervised by its own Shariah board. Its deposits and financing are Shariah-structured, so the debt and cash ratios don't apply.`,
+      rules: [
+        { key: "business", name: "Business Activity", value: kind === "Islamic bank" ? "Islamic banking" : "Takaful (Islamic insurance)", limit: "Allowed business", result: "pass" },
+        { key: "debt", name: "Interest-Bearing Debt ÷ Market Value", value: na, limit: "Under 30%", result: "unknown" },
+        { key: "cash", name: "Cash & Interest-Earning Investments ÷ Market Value", value: na, limit: "Under 30%", result: "unknown" },
+      ],
+      dataDate: facts?.data_date ?? null,
+    };
+  }
   if (!facts || !facts.found) return notScreened(t, "We couldn't find screening data for this stock.");
   const qt = (facts.quote_type ?? "").toUpperCase();
   if (qt === "ETF" || qt === "MUTUALFUND") return notScreened(t, "Funds hold many companies, so Folio can't screen them.");

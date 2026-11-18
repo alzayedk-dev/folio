@@ -60,7 +60,11 @@ export function HoldingsTable({
 }) {
   const [mode, setMode] = usePersistentState<Mode>("folio.plMode", "usd", ["usd", "pct"]);
   const [sort, setSort] = useState<Sort>({ key: "value", dir: -1 });
-  const shariah = useShariah(useMemo(() => holdings.map((h) => h.ticker), [holdings]), showShariah);
+  const shariah = useShariah(
+    useMemo(() => holdings.map((h) => h.ticker), [holdings]),
+    showShariah,
+    useMemo(() => Object.fromEntries(holdings.map((h) => [h.ticker, h.name])), [holdings]),
+  );
   const extra = showShariah ? 1 : 0;
   const stocksValue = holdings.reduce((a, h) => a + h.value, 0);
   const stocksWeight = holdings.reduce((a, h) => a + h.weight, 0);

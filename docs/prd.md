@@ -203,6 +203,8 @@ Opens when a ticker is clicked.
 3. **Cash and interest-earning investments** must be under **30%** of the company's market value.
 4. **Non-halal income** must be under **5%** of total income. This figure isn't published in the data Folio uses, so the details say "Information not available". This is one reason a result can be Doubtful.
 
+**Islamic banks and Takaful:** Islamic banks (for example Kuwait Finance House, Boubyan, Warba, KIB, Al Rajhi, Alinma, Qatar Islamic Bank, Masraf Al Rayan, Dubai Islamic Bank, Abu Dhabi Islamic Bank, and any bank with "Islamic" in its name) and Takaful (Islamic insurance) companies show **Compliant (Islamic Bank)** or **Compliant (Takaful)**. They are supervised by their own Shariah boards, so the "no banks / insurance" rule and the debt and cash ratios are marked "Not applicable". Conventional banks and insurers still fail.
+
 **How the result is decided**
 - **Not Compliant:** the business is not allowed, or rule 2 or 3 fails.
 - **Doubtful:** the business has mixed income, or some financial data is missing.

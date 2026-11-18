@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { market } from "@/lib/market";
 import { screen, type ShariahResult } from "@/lib/shariah";
@@ -11,8 +11,11 @@ export type ShariahState = { status: "off" | "loading" | "ready" | "error"; resu
  * Loads Shariah screening for a list of tickers after the page has shown, so it never slows the holdings table.
  * Facts come from the market Edge Function (cached 7 days); the rules run here (lib/shariah.ts).
  */
-export function useShariah(tickers: string[], enabled: boolean): ShariahState {
+export function useShariah(tickers: string[], enabled: boolean, names: Record<string, string> = {}): ShariahState {
   const key = [...tickers].sort().join(",");
+  // Company names help recognise Islamic banks and Takaful companies (kept in a ref so they don't re-trigger loading)
+  const namesRef = useRef(names);
+  namesRef.current = names;
   const [state, setState] = useState<ShariahState>({ status: enabled && key ? "loading" : "off", results: {} });
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export function useShariah(tickers: string[], enabled: boolean): ShariahState {
       .then((facts) => {
         if (cancelled) return;
         const results: Record<string, ShariahResult> = {};
-        for (const t of list) results[t] = screen(t, facts[t] ?? null);
+        for (const t of list) results[t] = screen(t, facts[t] ?? null, namesRef.current[t]);
         setState({ status: "ready", results });
       })
       .catch(() => {

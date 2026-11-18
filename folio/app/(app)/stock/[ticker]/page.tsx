@@ -109,7 +109,7 @@ async function StockContent({ ticker }: { ticker: string }) {
             {showShariah && (
               <div className="mt-2">
                 <Suspense fallback={<span className="inline-block h-6 w-28 animate-pulse rounded-full bg-surface" role="status" aria-label="Loading Shariah screening" />}>
-                  <StockShariah ticker={ticker} />
+                  <StockShariah ticker={ticker} name={p.name} />
                 </Suspense>
               </div>
             )}
@@ -201,11 +201,11 @@ async function StockContent({ ticker }: { ticker: string }) {
 }
 
 /** Streams in after the rest of the page so a slow lookup never holds up prices or the chart. */
-async function StockShariah({ ticker }: { ticker: string }) {
+async function StockShariah({ ticker, name }: { ticker: string; name: string }) {
   const supabase = await createClient();
   try {
     const facts = isMetal(ticker) ? {} : await market.shariah(supabase, [ticker]);
-    return <ShariahBadge result={screen(ticker, facts[ticker] ?? null)} size="md" />;
+    return <ShariahBadge result={screen(ticker, facts[ticker] ?? null, name)} size="md" />;
   } catch {
     return <span className="text-xs text-muted">{messages.shariahSlow}</span>;
   }

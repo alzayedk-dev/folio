@@ -62,3 +62,25 @@ describe("Shariah screening (AAOIFI)", () => {
     expect(screen("X", facts({ industry: null, yahoo_sector: "Financial Services" })).status).toBe("doubtful");
   });
 });
+
+describe("Islamic financial institutions", () => {
+  const bankFacts = (over: Partial<ShariahFacts> = {}) => ({
+    ticker: "X", found: true, quote_type: "EQUITY", industry: "Banks - Regional", yahoo_sector: "Financial Services",
+    total_debt: 900, cash_investments: 800, market_cap: 100, data_date: "2026-09-30", ...over,
+  });
+  it("marks a known Islamic bank (KFH) as compliant even though it's a bank with large deposits", () => {
+    const r = screen("KFH.KW", bankFacts(), "Kuwait Finance House K.S.C.P.");
+    expect(r).toMatchObject({ status: "compliant", label: "Compliant (Islamic Bank)" });
+    expect(r.rules.find((x) => x.key === "debt")?.value).toMatch(/Not applicable/);
+  });
+  it("recognises Islamic banks by name on any exchange", () => {
+    expect(screen("ZZZ.AE", bankFacts(), "Sharjah Islamic Bank PJSC").status).toBe("compliant");
+    expect(screen("1120.SR", bankFacts(), "Al Rajhi Banking and Investment Corporation").label).toBe("Compliant (Islamic Bank)");
+  });
+  it("recognises Takaful (Islamic insurance) companies", () => {
+    expect(screen("TKFL.XX", bankFacts({ industry: "Insurance - Diversified" }), "Salama Takaful Co").label).toBe("Compliant (Takaful)");
+  });
+  it("still fails conventional banks", () => {
+    expect(screen("JPM", bankFacts({ industry: "Banks - Diversified" }), "JPMorgan Chase & Co.").status).toBe("not_compliant");
+  });
+});
