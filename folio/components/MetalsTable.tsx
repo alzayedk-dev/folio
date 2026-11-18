@@ -34,7 +34,43 @@ export function MetalsTable({ metals, base, coins = {} }: { metals: HoldingRow[]
           <SegmentedToggle label="Show profit and loss in dollars or percent" value={mode} options={PL} onChange={setMode} />
         </div>
       </div>
-      <div className="overflow-x-auto">
+      {/* Phones: one card per metal */}
+      <ul className="divide-y divide-line md:hidden">
+        {metals.map((m) => (
+          <li key={m.ticker} className="px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Link href={`/stock/${encodeURIComponent(m.ticker)}`} className="font-semibold hover:text-brand hover:underline">
+                  {m.name}
+                </Link>
+                {coins[m.ticker]?.length ? <p className="text-xs text-muted">{coins[m.ticker].map((c) => `${c.count} × ${c.label}`).join(" · ")}</p> : null}
+              </div>
+              <div className="shrink-0 text-right tabular">
+                <p className="font-semibold">{money(m.value, base)}</p>
+                <p className={`text-xs font-medium ${gainClass(m.unrealizedPL)}`}>
+                  {mode === "usd" ? money(m.unrealizedPL, base, { sign: true }) : pct(m.unrealizedPLPct, { sign: true })}
+                </p>
+              </div>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted tabular">
+              <span>
+                {fmtShares(Math.round(fromOunces(m.shares, unit) * 1e4) / 1e4)} {per} pure
+              </span>
+              <span className="text-right">{pct(m.weight)} of portfolio</span>
+              <span>Now {fmtPrice(fromPricePerOunce(m.price, unit), m.currency)} / {per}</span>
+              <span className="text-right">Buy {fmtPrice(fromPricePerOunce(m.avgCost, unit), m.currency)} / {per}</span>
+            </div>
+          </li>
+        ))}
+        <li className="flex items-center justify-between gap-3 bg-brand-soft/40 px-4 py-3 font-semibold tabular">
+          <span>Total Metals</span>
+          <span className="text-right">
+            {money(total, base)}
+            <span className={`block text-xs ${gainClass(totalPL)}`}>{mode === "usd" ? money(totalPL, base, { sign: true }) : pct(total - totalPL > 0 ? (totalPL / (total - totalPL)) * 100 : null, { sign: true })}</span>
+          </span>
+        </li>
+      </ul>
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[46rem] text-sm">
           <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
             <tr>

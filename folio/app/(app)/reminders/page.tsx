@@ -95,7 +95,31 @@ async function RemindersContent({ first, second }: { first: number; second: numb
     <div className="space-y-4">
       {failed && <Alert tone="info">{messages.marketSlow()}</Alert>}
       <section aria-label="Upcoming earnings" className="rounded-2xl border border-line bg-white shadow-sm">
-        <div className="overflow-x-auto">
+        {/* Phones: one row per stock that fits the screen */}
+        <ul className="divide-y divide-line md:hidden">
+          {rows.map((r) => {
+            const left = r.date ? daysUntil(r.date) : null;
+            return (
+              <li key={r.ticker} className="flex items-start justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <Link href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-semibold hover:text-brand hover:underline">
+                    {r.ticker}
+                  </Link>
+                  <p className="truncate text-xs text-muted">{r.name}</p>
+                </div>
+                <div className="shrink-0 text-right text-sm tabular">
+                  <p>{r.date ? new Date(r.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : <span className="text-muted">Not announced yet</span>}</p>
+                  {left != null && (
+                    <div className="mt-1 flex items-center justify-end gap-2 text-xs text-muted">
+                      {left} days <Flag days={left} first={first} second={second} />
+                    </div>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[36rem] text-sm">
             <thead className="border-b border-line bg-surface text-xs text-muted">
               <tr>

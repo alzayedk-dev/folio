@@ -110,8 +110,55 @@ export function HoldingsTable({
         </div>
       </div>
 
-      {/* Table at every width; scrolls sideways inside the box on small screens */}
-      <div className="overflow-x-auto">
+      {/* Phones: one card per stock, everything fits the screen */}
+      <ul className="divide-y divide-line md:hidden">
+        {sorted.map((h) => (
+          <li key={h.ticker} className="px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Link href={`/stock/${encodeURIComponent(h.ticker)}`} className="font-semibold hover:text-brand hover:underline">
+                  {h.ticker}
+                </Link>
+                <p className="truncate text-xs text-muted">{h.name}</p>
+              </div>
+              <div className="shrink-0 text-right tabular">
+                <p className="font-semibold">{h.fxMissing ? money(h.valueLocal, h.currency) : money(h.value, base)}</p>
+                <p className={`text-xs font-medium ${gainClass(h.unrealizedPL)}`}>{plCell(h)}</p>
+              </div>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted tabular">
+              <span>
+                {fmtShares(h.shares)} × {fmtPrice(h.price, h.currency)}
+                <PriceNote h={h} />
+              </span>
+              <span className="text-right">Buy {fmtPrice(h.avgCost, h.currency)}</span>
+              <span className="truncate">{h.sector}</span>
+              <span className="flex items-center justify-end gap-1.5">
+                {h.fxMissing ? "—" : pct(h.weight)} <WarningBadge level={h.warning} title={WARNING_TITLE} hideNone />
+              </span>
+            </div>
+            {showShariah && (
+              <div className="mt-2">
+                {shariah.results[h.ticker] ? (
+                  <ShariahBadge result={shariah.results[h.ticker]} />
+                ) : shariah.status === "error" ? null : (
+                  <span className="inline-block h-4 w-20 animate-pulse rounded-full bg-surface" role="status" aria-label="Loading Shariah screening" />
+                )}
+              </div>
+            )}
+          </li>
+        ))}
+        <li className="flex items-center justify-between gap-3 bg-brand-soft/40 px-4 py-3 font-semibold tabular">
+          <span>Total Stocks</span>
+          <span className="text-right">
+            {money(stocksValue, base)}
+            <span className={`block text-xs ${gainClass(stocksPL)}`}>{mode === "usd" ? money(stocksPL, base, { sign: true }) : pct(stocksPLPct, { sign: true })}</span>
+          </span>
+        </li>
+      </ul>
+
+      {/* Tablets and desktops: full table (scrolls sideways inside the box if needed) */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[60rem] text-sm">
           <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
             <tr>

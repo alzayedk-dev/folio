@@ -61,3 +61,13 @@ body {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* iPhones zoom into any text box under 16px when it's tapped (and stay zoomed). On phones, every input,
+   dropdown and text area uses 16px text so tapping them never zooms the page. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

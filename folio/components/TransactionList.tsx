@@ -80,7 +80,7 @@ export function TransactionList({ rows, positions, cash }: { rows: TxnRow[]; pos
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-xs text-muted">
           <span className="mb-1 block">Asset</span>
-          <Select value={ticker} onChange={(e) => setTicker(e.target.value)} className="w-40 py-2" aria-label="Filter by asset">
+          <Select value={ticker} onChange={(e) => setTicker(e.target.value)} className="w-36 py-2 sm:w-40" aria-label="Filter by asset">
             <option value="all">All Assets</option>
             {tickers.map((t) => (
               <option key={t} value={t}>{t}</option>
@@ -89,7 +89,7 @@ export function TransactionList({ rows, positions, cash }: { rows: TxnRow[]; pos
         </label>
         <label className="text-xs text-muted">
           <span className="mb-1 block">Type</span>
-          <Select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="w-36 py-2" aria-label="Filter by type">
+          <Select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="w-32 py-2 sm:w-36" aria-label="Filter by type">
             <option value="all">All Types</option>
             <option value="buy">Buys</option>
             <option value="sell">Sells</option>
@@ -108,8 +108,42 @@ export function TransactionList({ rows, positions, cash }: { rows: TxnRow[]; pos
           <p className="px-5 py-10 text-center text-sm text-muted">No trades match these filters.</p>
         ) : (
           <>
-            {/* Table at every width; scrolls sideways inside the box on small screens */}
-            <div className="overflow-x-auto">
+            {/* Phones: one card per trade, so everything fits the screen without sideways scrolling */}
+            <ul className="divide-y divide-line md:hidden">
+              {shown.map((r) => (
+                <li key={r.id} className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link href={`/stock/${encodeURIComponent(r.ticker)}`} className="font-semibold hover:text-brand hover:underline">
+                        {isMetal(r.ticker) ? r.name : r.ticker}
+                      </Link>
+                      <p className="truncate text-xs text-muted">{r.name}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-semibold tabular">{money(r.total, r.currency)}</p>
+                      {r.realizedPL != null && <p className={`text-xs tabular ${gainClass(r.realizedPL)}`}>{money(r.realizedPL, r.currency, { sign: true })}</p>}
+                    </div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                    <TypeBadge type={r.type} />
+                    <span className="tabular">{r.tradeDate}</span>
+                    {r.type !== "dividend" && (
+                      <span className="tabular">
+                        {qtyCell(r)} @ {priceCell(r)}
+                      </span>
+                    )}
+                    {r.fees ? <span className="tabular">Fees {money(r.fees, r.currency)}</span> : null}
+                  </div>
+                  {r.notes && <p className="mt-1 line-clamp-2 text-xs text-muted">{r.notes}</p>}
+                  <div className="mt-1 flex justify-end">
+                    <RowActions row={r} onEdit={() => setEditing(r)} onDelete={() => remove(r)} busy={busyId === r.id} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* Tablets and desktops: full table */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[58rem] text-sm">
                 <thead className="whitespace-nowrap border-b border-line bg-surface text-xs text-muted">
                   <tr>
