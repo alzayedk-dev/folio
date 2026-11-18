@@ -30,6 +30,18 @@
     ],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "owner": "alzayedk-dev",
+    "extra": {
+      "eas": {
+        "projectId": "97dbbe30-36b5-436e-ac57-98c393bc8049"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/97dbbe30-36b5-436e-ac57-98c393bc8049"
     }
   }
 }
