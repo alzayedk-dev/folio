@@ -1,0 +1,88 @@
+# Folio: automatic checks on GitHub's servers (your computer can be off).
+# Runs on every push to main, on pull requests, every night at 12:00 AM Kuwait time, and on demand.
+# No secret keys are used: the build only needs the public Supabase settings, so placeholders are enough.
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 21 * * *" # 21:00 UTC = 12:00 AM Kuwait (UTC+3)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  website:
+    name: Website (tests, code, build, security)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: folio
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: folio/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Code style and mistakes (lint)
+        run: npm run lint
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Security audit (libraries the live site uses)
+        run: npm audit --omit=dev --audit-level=high
+
+  app:
+    name: Expo app (type check, security)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: folio-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: folio-app/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Security audit (libraries the app uses)
+        run: npm audit --omit=dev --audit-level=high
+
+  live-site:
+    name: Live site is up
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Main pages answer
+        run: |
+          for path in / /about /contact /login /signup; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://folio-pink-five.vercel.app$path")
+            echo "$path -> $code"
+            [ "$code" = "200" ] || exit 1
+          done
+      - name: Private pages still require a login
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "https://folio-pink-five.vercel.app/portfolio")
+          echo "/portfolio (logged out) -> $code"
+          [ "$code" = "307" ] || [ "$code" = "302" ] || exit 1

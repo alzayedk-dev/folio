@@ -1,0 +1,24 @@
+# Weekly suggestions to update libraries (security fixes first). Each one arrives as a pull request
+# that the Checks workflow tests before you decide to merge it.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /folio
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /folio-app
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
