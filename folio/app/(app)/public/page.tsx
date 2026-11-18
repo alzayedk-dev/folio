@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { listPublic } from "@/lib/loadPublic";
 import { PageHeader, EmptyState } from "@/components/PagePlaceholder";
 import { Avatar } from "@/components/UserMenu";
@@ -10,9 +10,7 @@ export const metadata = { title: "Public Portfolios · Folio" };
 
 export default async function PublicPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   const list = (await listPublic(supabase)).sort((a, b) => (b.returns.y1 ?? b.returns.all ?? -1e9) - (a.returns.y1 ?? a.returns.all ?? -1e9));
 
   return (

@@ -1,13 +1,10 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/AppShell";
 import { getCurrentPortfolio, getMyPortfolios } from "@/lib/currentPortfolio";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getSessionUser()]);
   if (!user) redirect("/login");
 
   const [{ data: profile }, { list }, current] = await Promise.all([

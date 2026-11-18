@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { loadLedgerData } from "@/lib/loadPortfolio";
 import { replayLedger } from "@/lib/portfolio";
 import { market } from "@/lib/market";
@@ -15,9 +15,7 @@ export const metadata = { title: "Reminders · Folio" };
 
 export default async function RemindersPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   const { data: p } = user ? await supabase.from("profiles").select("reminder_first, reminder_second").eq("id", user.id).maybeSingle() : { data: null };
   const first = p?.reminder_first ?? DEFAULT_REMINDERS.first;
   const second = p ? p.reminder_second : DEFAULT_REMINDERS.second;

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
@@ -24,3 +25,15 @@ export async function createClient() {
     },
   );
 }
+
+/**
+ * The signed-in user, checked with Supabase once per page request (the layout, the portfolio helpers and the
+ * page itself all share this one lookup instead of each asking again).
+ */
+export const getSessionUser = cache(async () => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+});

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/PagePlaceholder";
 import { SettingsForm } from "@/components/SettingsForm";
 
@@ -7,9 +7,7 @@ export const metadata = { title: "Settings · Folio" };
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) redirect("/login?next=/settings");
 
   const { data: p } = await supabase

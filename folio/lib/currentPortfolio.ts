@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { createClient } from "./supabase/server";
+import { createClient, getSessionUser } from "./supabase/server";
 import { PORTFOLIO_COOKIE, pickPortfolio, sortPortfolios, type Portfolio } from "./portfolios";
 
 /**
@@ -9,10 +9,7 @@ import { PORTFOLIO_COOKIE, pickPortfolio, sortPortfolios, type Portfolio } from 
  * Cached per request. Creates "My Portfolio" if somehow none exist.
  */
 export const getMyPortfolios = cache(async (): Promise<{ userId: string | null; list: Portfolio[] }> => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getSessionUser()]);
   if (!user) return { userId: null, list: [] };
   const cols = "id, name, kind, is_public, position, created_at";
   const { data } = await supabase.from("portfolios").select(cols).eq("user_id", user.id);

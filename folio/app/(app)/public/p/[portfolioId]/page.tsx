@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { getPublic } from "@/lib/loadPublic";
 import { sectorWarning, SECTOR_THRESHOLDS } from "@/lib/portfolio";
 import { isMetal, METALS } from "@/lib/metals";
@@ -18,9 +18,7 @@ export default async function PublicPortfolioPage({ params }: { params: Promise<
   const { portfolioId } = await params;
   const supabase = await createClient();
   const p = await getPublic(supabase, portfolioId);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   const isMe = !!p && user?.id === p.userId;
   let following = false;
   let followers = 0;
