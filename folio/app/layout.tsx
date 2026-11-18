@@ -22,6 +22,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#047857",
+  // Fit the device width and never shrink below normal size (people can still zoom in)
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

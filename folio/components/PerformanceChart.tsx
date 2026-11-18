@@ -300,7 +300,7 @@ function CompareMenu({
         <span aria-hidden="true">▾</span>
       </button>
       {open && (
-        <div className="absolute left-0 z-40 mt-1.5 w-64 rounded-xl border border-line bg-white p-2 shadow-xl">
+        <div className="absolute left-0 z-40 mt-1.5 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-line bg-white p-2 shadow-xl">
           <p className="px-2 pb-1 text-[11px] text-muted">Your other portfolios, shown as % return</p>
           {others.map((o) => (
             <label key={o.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-brand-soft">

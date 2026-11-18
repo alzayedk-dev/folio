@@ -66,7 +66,7 @@ export function PortfolioSwitcher({ portfolios, currentId, baseCurrency }: { por
           </svg>
         </button>
         {menu && (
-          <ul role="listbox" aria-label="Your portfolios" className="absolute left-0 z-40 mt-1.5 max-h-80 w-72 overflow-y-auto rounded-xl border border-line bg-white p-1 shadow-xl">
+          <ul role="listbox" aria-label="Your portfolios" className="absolute left-0 z-40 mt-1.5 max-h-80 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-line bg-white p-1 shadow-xl">
             {portfolios.map((p) => (
               <li key={p.id} role="option" aria-selected={p.id === current.id}>
                 <button

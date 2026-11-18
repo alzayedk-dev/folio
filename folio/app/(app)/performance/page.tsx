@@ -18,7 +18,7 @@ export default function PerformancePage() {
         fallback={
           <div role="status" aria-label={messages.loading} className="space-y-4">
             <p className="text-sm text-muted">{messages.loading}</p>
-            <Skeleton className="h-10 w-80" />
+            <Skeleton className="h-10 w-full max-w-80" />
             <Skeleton className="h-80" />
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (

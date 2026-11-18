@@ -31,8 +31,24 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Responsive on every device: the page itself never gets wider than the screen (wide tables scroll inside
+   their own box), so phones and in-app web views never shrink the whole page to fit. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+@supports (overflow: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
 html {
   color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
