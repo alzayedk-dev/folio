@@ -7,6 +7,7 @@ const MINOR_UNITS: Record<string, { major: string; divisor: number }> = {
   ZAc: { major: "ZAR", divisor: 100 }, // Johannesburg cents
   ZAC: { major: "ZAR", divisor: 100 },
   ILA: { major: "ILS", divisor: 100 }, // Tel Aviv agorot
+  KWF: { major: "KWD", divisor: 1000 }, // Kuwait fils (Boursa Kuwait prices on Yahoo)
 };
 
 /** Returns the major currency code and the number to divide prices by. */

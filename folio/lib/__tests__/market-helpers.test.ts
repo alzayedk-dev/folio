@@ -46,6 +46,7 @@ describe("mapSector", () => {
 describe("currency helpers", () => {
   it("converts London pence to pounds", () => {
     expect(toMajor(117.4, "GBp")).toEqual({ value: 1.174, currency: "GBP" });
+    expect(toMajor(765, "KWF")).toEqual({ value: 0.765, currency: "KWD" }); // Kuwait fils → dinars
     expect(normalizeCurrency("GBX")).toEqual({ currency: "GBP", divisor: 100 });
   });
   it("leaves normal currencies alone", () => {
