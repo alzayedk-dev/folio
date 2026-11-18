@@ -40,7 +40,7 @@ function RowActions({ row, onEdit, onDelete, busy }: { row: TxnRow; onEdit: () =
   );
 }
 
-export function TransactionList({ rows, positions, cash, cashSetOn }: { rows: TxnRow[]; positions: PositionSummary; cash?: Record<string, number>; cashSetOn?: string | null }) {
+export function TransactionList({ rows, positions, cash }: { rows: TxnRow[]; positions: PositionSummary; cash?: Record<string, number> }) {
   const router = useRouter();
   const [ticker, setTicker] = useState("all");
   const [type, setType] = useState<"all" | TxnRow["type"]>("all");
@@ -157,7 +157,7 @@ export function TransactionList({ rows, positions, cash, cashSetOn }: { rows: Tx
         )}
       </div>
 
-      <TransactionModal open={!!editing} onClose={() => setEditing(null)} positions={positions} editing={editing} cash={cash} cashSetOn={cashSetOn} />
+      <TransactionModal open={!!editing} onClose={() => setEditing(null)} positions={positions} editing={editing} cash={cash} />
     </section>
   );
 }

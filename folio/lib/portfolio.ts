@@ -114,9 +114,25 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
   };
   const tradeTime = new Map(txns.map((t) => [t.id, recorded(t.createdAt)]));
 
+  // A balance you set ("my cash is $X") covers everything recorded BEFORE it. A trade recorded AFTER it but
+  // dated earlier (a back-filled trade) must still change today's cash, so its cash effect (and any deposit
+  // made for it) moves to just after the latest such balance. Its shares still count from the trade date.
+  const checkpoints = cashEntries
+    .filter((c) => c.kind === "starting" || c.kind === "balance")
+    .map((c) => ({ date: c.entryDate, at: recorded(c.createdAt) }))
+    .filter((c): c is { date: string; at: number } => c.at != null);
+  const cashDateFor = (tradeDate: string, at: number | null): string => {
+    if (at == null) return tradeDate;
+    let date = tradeDate;
+    for (const c of checkpoints) if (c.at < at && c.date > date) date = c.date;
+    return date;
+  };
+  const tradeById = new Map(txns.map((t) => [t.id, t]));
+
   for (const c of cashEntries) {
+    const linked = c.txnId ? tradeById.get(c.txnId) : undefined;
     events.push({
-      date: c.entryDate,
+      date: linked ? cashDateFor(c.entryDate, tradeTime.get(linked.id) ?? null) : c.entryDate,
       order: 0,
       at: c.txnId ? tradeTime.get(c.txnId) ?? recorded(c.createdAt) : recorded(c.createdAt),
       tie: (c.createdAt ?? "") + c.id,
@@ -140,10 +156,13 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
   }
 
   for (const t of txns) {
+    const at = recorded(t.createdAt);
+    const cashDate = cashDateFor(t.tradeDate, at);
+    let cashEffect: (() => void) | null = null;
     events.push({
       date: t.tradeDate,
       order: 1,
-      at: recorded(t.createdAt),
+      at,
       tie: t.createdAt + t.id,
       run: () => {
         const p = (positions[t.ticker] ??= { ticker: t.ticker, currency: t.currency, shares: 0, costBasis: 0, avgCost: 0, realizedPL: 0, dividends: 0 });
@@ -154,7 +173,7 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
           p.shares += shares;
           p.costBasis += cost;
           p.avgCost = p.shares > EPS ? p.costBasis / p.shares : 0;
-          pay(cost, t.currency, t.id, t.tradeDate);
+          cashEffect = () => pay(cost, t.currency, t.id, cashDate);
         } else if (t.type === "sell") {
           let shares = t.shares ?? 0;
           if (shares > p.shares + EPS) {
@@ -168,15 +187,23 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
           p.costBasis -= p.avgCost * shares;
           p.shares = tidy(p.shares - shares);
           if (p.shares === 0) p.costBasis = 0;
-          addCash(t.currency, proceeds);
+          cashEffect = () => addCash(t.currency, proceeds);
           sells.push({ txnId: t.id, ticker: t.ticker, proceeds, realizedPL: realized, currency: t.currency });
         } else {
           const amt = (t.amount ?? 0) - fees;
           p.dividends += amt;
-          addCash(t.currency, amt);
+          cashEffect = () => addCash(t.currency, amt);
+        }
+        if (cashDate === t.tradeDate) {
+          cashEffect();
+          cashEffect = null;
         }
       },
     });
+    if (cashDate !== t.tradeDate) {
+      // back-filled trade: its cash moves to after the balance that was set before it was recorded
+      events.push({ date: cashDate, order: 1, at, tie: t.createdAt + t.id + "~cash", run: () => cashEffect?.() });
+    }
   }
 
   events.sort((a, b) => {

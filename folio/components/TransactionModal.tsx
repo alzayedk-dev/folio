@@ -74,7 +74,6 @@ export function TransactionModal({
   initialType = "buy",
   presetTicker,
   cash = {},
-  cashSetOn = null,
 }: {
   open: boolean;
   onClose: () => void;
@@ -85,8 +84,6 @@ export function TransactionModal({
   presetTicker?: string;
   /** Cash in this portfolio by currency, to show what a buy "from cash" would use. */
   cash?: Record<string, number>;
-  /** Date of the latest "Set Balance" / starting cash: earlier trades are already included in it. */
-  cashSetOn?: string | null;
 }) {
   const router = useRouter();
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -266,8 +263,7 @@ export function TransactionModal({
   // Same order as the books: same-currency cash first, then other currencies (largest first); the rest is new money
   const after = (() => {
     const out: Record<string, number> = { ...Object.fromEntries(held) };
-    const coveredByBalance = !!cashSetOn && (form.tradeDate || todayLocal()) < cashSetOn;
-    let remaining = funding === "cash" && !coveredByBalance ? cost : 0;
+    let remaining = funding === "cash" ? cost : 0;
     const take = (c: string) => {
       if (remaining <= 1e-9 || !(out[c] > 0)) return;
       const availInCcy = c === ccy ? out[c] : convert(out[c], c, ccy, fx);
@@ -560,6 +556,9 @@ export function TransactionModal({
               <>
                 <Row label="Total Cost" value={valid ? money(qty * px + fee, ccy) : "—"} />
                 {funding && valid && <Row label="Cash After" value={!ratesReady ? "Converting…" : cashText(funding === "new" ? held : after.balances)} />}
+                {funding === "cash" && valid && ratesReady && after.shortfall > 0.005 && (
+                  <p className="mt-1 text-xs text-warn">Cash used up. {money(after.shortfall, ccy)} counted as money added.</p>
+                )}
               </>
             )}
             {type === "sell" && (

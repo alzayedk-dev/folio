@@ -332,3 +332,31 @@ describe("same-day order: as recorded", () => {
     expect(l.autoDeposits).toHaveLength(0);
   });
 });
+
+describe("back-filled trades after setting a balance", () => {
+  const bal = { id: "b1", kind: "balance" as const, amount: 10000, currency: "USD", entryDate: "2026-11-18", createdAt: "2026-11-18T08:07:12Z" };
+  const add500 = { id: "d1", kind: "deposit" as const, amount: 500, currency: "USD", entryDate: "2026-11-18", createdAt: "2026-11-18T08:23:42Z" };
+  const add200 = { id: "d2", kind: "deposit" as const, amount: 200, currency: "USD", entryDate: "2026-11-18", createdAt: "2026-11-18T09:46:32Z" };
+  it("a buy from cash entered after the balance reduces today's cash even if it's dated earlier", () => {
+    const spcx = { ...buy("SPCX", 40, 155, "2026-08-18"), createdAt: "2026-11-18T09:47:27Z" };
+    const l = replayLedger([spcx], [bal, add500, add200]);
+    expect(l.cash.USD).toBeCloseTo(10700 - 6200);
+    expect(l.positions.SPCX.shares).toBe(40); // shares still count from August
+  });
+  it("a buy larger than the cash uses it all and counts the rest as new money (Micron: 15 × 760 vs 10,700)", () => {
+    const mu = { ...buy("MU", 15, 760, "2026-11-09"), createdAt: "2026-11-18T10:00:00Z" };
+    const l = replayLedger([mu], [bal, add500, add200]);
+    expect(l.cash.USD ?? 0).toBeCloseTo(0);
+    expect(l.autoDeposits[0].amount).toBeCloseTo(700);
+  });
+  it("a back-filled buy paid with new money leaves today's cash alone", () => {
+    const nok = { ...buy("NOK", 100, 7.59, "2026-11-10"), createdAt: "2026-11-18T10:05:00.000Z" };
+    const dep = { id: "d3", kind: "deposit" as const, amount: 759, currency: "USD", entryDate: "2026-11-10", createdAt: "2026-11-18T10:05:00.060Z", txnId: nok.id };
+    const l = replayLedger([nok], [bal, add500, add200, dep]);
+    expect(l.cash.USD).toBeCloseTo(10700);
+  });
+  it("trades recorded before the balance are still covered by it", () => {
+    const lly = { ...buy("LLY", 20, 1100, "2026-07-17"), createdAt: "2026-11-17T20:16:32Z" };
+    expect(replayLedger([lly], [bal]).cash.USD).toBeCloseTo(10000);
+  });
+});

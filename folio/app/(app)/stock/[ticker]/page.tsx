@@ -82,7 +82,6 @@ async function StockContent({ ticker }: { ticker: string }) {
   let position: { shares: number; avgCost: number; realized: number } | null = null;
   let positions = {};
   let cashByCcy: Record<string, number> = {};
-  let cashSetOn: string | null = null;
   let showShariah = true;
   if (ledgerRes.status === "fulfilled") {
     const { txns, cash, baseCurrency } = ledgerRes.value;
@@ -90,7 +89,6 @@ async function StockContent({ ticker }: { ticker: string }) {
     const ledger = replayLedger(txns, cash, { base: baseCurrency });
     positions = toPositionSummary(ledger);
     cashByCcy = ledger.cash;
-    cashSetOn = cash.filter((c) => c.kind === "starting" || c.kind === "balance").map((c) => c.entryDate).sort().at(-1) ?? null;
     const pos = ledger.positions[ticker];
     if (pos) position = { shares: pos.shares, avgCost: pos.avgCost, realized: pos.realizedPL };
   }
@@ -119,7 +117,7 @@ async function StockContent({ ticker }: { ticker: string }) {
             )}
           </div>
         </div>
-        <AddTransactionButton positions={positions} presetTicker={ticker} cash={cashByCcy} cashSetOn={cashSetOn} />
+        <AddTransactionButton positions={positions} presetTicker={ticker} cash={cashByCcy} />
       </div>
 
       {/* Price + position */}
