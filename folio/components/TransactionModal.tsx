@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { market, MarketError, type SearchResult } from "@/lib/market";
+import { convert, market, MarketError, type FxTable, type SearchResult } from "@/lib/market";
 import { messages } from "@/lib/messages";
 import { money, price as fmtPrice, shares as fmtShares, todayLocal, gainClass } from "@/lib/format";
 import { createTransaction, updateTransaction } from "@/app/(app)/actions/transactions";
@@ -74,6 +74,7 @@ export function TransactionModal({
   initialType = "buy",
   presetTicker,
   cash = {},
+  cashSetOn = null,
 }: {
   open: boolean;
   onClose: () => void;
@@ -84,6 +85,8 @@ export function TransactionModal({
   presetTicker?: string;
   /** Cash in this portfolio by currency, to show what a buy "from cash" would use. */
   cash?: Record<string, number>;
+  /** Date of the latest "Set Balance" / starting cash: earlier trades are already included in it. */
+  cashSetOn?: string | null;
 }) {
   const router = useRouter();
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -94,6 +97,8 @@ export function TransactionModal({
   const [saving, setSaving] = useState(false);
   // Buys: paid from cash already in Folio, or with new money (then a matching deposit is recorded)
   const [funding, setFunding] = useState<"cash" | "new" | null>(null);
+  // Exchange rates, loaded when the buy could use cash held in another currency (e.g. USD cash for a KWD stock)
+  const [fx, setFx] = useState<FxTable | null>(null);
   const [unit, setUnitState] = useState<WeightUnit>("g"); // grams by default; Troy Oz one click away
   const metal = !!picked && isMetal(picked.ticker);
   const metalKey = picked && isMetal(picked.ticker) ? METALS[picked.ticker].key : "gold";
@@ -139,6 +144,22 @@ export function TransactionModal({
       setLoadingInfo(false);
     }
   }
+
+  const pickedCcy = picked?.currency ?? null;
+  const otherCcyCash = !!pickedCcy && Object.entries(cash).some(([c, a]) => c !== pickedCcy && a > 0.005);
+  useEffect(() => {
+    if (!open || !otherCcyCash || fx) return;
+    let cancelled = false;
+    market
+      .fx(createClient())
+      .then((t) => {
+        if (!cancelled) setFx(t);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, otherCcyCash, fx]);
 
   // Reset every time the pop-up opens
   useEffect(() => {
@@ -236,15 +257,36 @@ export function TransactionModal({
   const ownedLabel = metal ? `${fmtShares(Math.round(Math.max(fromOunces(owned, isCoinForm ? "g" : unit), 0) * 1e4) / 1e4)} ${isCoinForm ? "g" : unitShort} pure` : `${fmtShares(Math.round(Math.max(owned, 0) * 1e4) / 1e4)} shares`;
   // Cash this buy would use (when editing a buy paid from cash, its own cost is still in the balance)
   const editingCost = editing && editing.type === "buy" && editing.funding !== "new" ? (editing.shares ?? 0) * (editing.price ?? 0) + (editing.fees ?? 0) : 0;
-  const cashInCcy = Math.max((cash[ccy] ?? 0) + editingCost, 0);
-  const otherCash = Object.entries(cash).filter(([c, a]) => c !== ccy && a > 0.005);
-  const cashLine =
-    cashInCcy > 0.005
-      ? `Your ${ccy} cash is ${money(cashInCcy, ccy)}. It goes down by the cost.`
-      : otherCash.length
-        ? `You have no ${ccy} cash. Your ${otherCash.map(([c]) => c).join(", ")} cash is converted and used.`
-        : `You have no cash recorded in this portfolio yet.`;
-  const shortfall = valid && otherCash.length === 0 ? qty * px + fee - cashInCcy : 0;
+  const balances: Record<string, number> = { ...cash };
+  if (editingCost) balances[ccy] = (balances[ccy] ?? 0) + editingCost;
+  const held = Object.entries(balances).filter(([, a]) => a > 0.005);
+  const needsFx = held.some(([c]) => c !== ccy);
+  const ratesReady = !needsFx || !!fx;
+  const cost = valid ? qty * px + fee : 0;
+  // Same order as the books: same-currency cash first, then other currencies (largest first); the rest is new money
+  const after = (() => {
+    const out: Record<string, number> = { ...Object.fromEntries(held) };
+    const coveredByBalance = !!cashSetOn && (form.tradeDate || todayLocal()) < cashSetOn;
+    let remaining = funding === "cash" && !coveredByBalance ? cost : 0;
+    const take = (c: string) => {
+      if (remaining <= 1e-9 || !(out[c] > 0)) return;
+      const availInCcy = c === ccy ? out[c] : convert(out[c], c, ccy, fx);
+      if (availInCcy == null || availInCcy <= 0) return;
+      const use = Math.min(availInCcy, remaining);
+      out[c] -= c === ccy ? use : convert(use, ccy, c, fx) ?? 0;
+      remaining -= use;
+    };
+    take(ccy);
+    held
+      .filter(([c]) => c !== ccy)
+      .sort((a, b) => (convert(b[1], b[0], ccy, fx) ?? 0) - (convert(a[1], a[0], ccy, fx) ?? 0))
+      .forEach(([c]) => take(c));
+    return { balances: Object.entries(out).filter(([, a]) => a > 0.005), shortfall: remaining };
+  })();
+  const cashText = (list: [string, number][]) => (list.length ? list.map(([c, a]) => money(a, c)).join(" + ") : money(0, ccy));
+  const cashLine = !held.length
+    ? `Your cash: ${money(0, ccy)}`
+    : `Your cash: ${cashText(held)}`;
   const spot = picked?.currentPrice ?? null;
   // Current price in the same terms the user types: per share, per unit of bar weight, or melt value per coin
   const currentInUnit =
@@ -509,11 +551,6 @@ export function TransactionModal({
                   </label>
                 ))}
               </div>
-              {funding === "cash" && shortfall > 0.005 && (
-                <p className="mt-2 text-xs text-warn">
-                  That&apos;s {money(shortfall, ccy)} more than your {ccy} cash. Folio will count the difference as money you added.
-                </p>
-              )}
             </fieldset>
           )}
 
@@ -522,7 +559,7 @@ export function TransactionModal({
             {type === "buy" && (
               <>
                 <Row label="Total Cost" value={valid ? money(qty * px + fee, ccy) : "—"} />
-                {funding && valid && <Row label="Cash After" value={money(funding === "new" ? cashInCcy : Math.max(cashInCcy - (qty * px + fee), 0), ccy)} />}
+                {funding && valid && <Row label="Cash After" value={!ratesReady ? "Converting…" : cashText(funding === "new" ? held : after.balances)} />}
               </>
             )}
             {type === "sell" && (

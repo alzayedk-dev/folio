@@ -34,6 +34,7 @@ async function PortfolioContent() {
   const supabase = await createClient();
   const { ledger, valuation: v, notice, asOf, cash, showShariah, portfolioId, txns } = await loadValuation(supabase);
   const coins = coinHoldings(txns);
+  const cashSetOn = cash.filter((c) => c.kind === "starting" || c.kind === "balance").map((c) => c.entryDate).sort().at(-1) ?? null;
   const positions = toPositionSummary(ledger);
   after(() => refreshPublicSnapshotIfStale(supabase, portfolioId).catch(() => undefined));
   const hasAnything = v.holdings.length > 0 || v.cashValue > 0;
@@ -45,7 +46,7 @@ async function PortfolioContent() {
       <PageHeader
         title="Portfolio"
         subtitle="Your holdings, cash and sector mix at a glance."
-        action={<AddTransactionButton positions={positions} cash={ledger.cash} />}
+        action={<AddTransactionButton positions={positions} cash={ledger.cash} cashSetOn={cashSetOn} />}
       />
 
       {!hasAnything ? (
@@ -67,7 +68,7 @@ async function PortfolioContent() {
               <div className="rounded-2xl border border-line bg-white p-5 shadow-sm">
                 <p className="text-sm text-muted">Add a buy for any stock, ETF, gold or silver you own. Folio fills in the live price and keeps the math.</p>
                 <div className="mt-4">
-                  <AddTransactionButton positions={positions} cash={ledger.cash} />
+                  <AddTransactionButton positions={positions} cash={ledger.cash} cashSetOn={cashSetOn} />
                 </div>
               </div>
             </li>

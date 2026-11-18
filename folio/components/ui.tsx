@@ -2,7 +2,8 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAt
 
 export function Field({ label, htmlFor, hint, children }: { label: string; htmlFor: string; hint?: string; children: ReactNode }) {
   return (
-    <div className="space-y-1.5">
+    // min-w-0: lets fields shrink inside grids (iPad Safari date inputs otherwise overflow into the next column)
+    <div className="min-w-0 space-y-1.5">
       <label htmlFor={htmlFor} className="block text-sm font-medium text-foreground">
         {label}
       </label>
@@ -13,11 +14,12 @@ export function Field({ label, htmlFor, hint, children }: { label: string; htmlF
 }
 
 const inputBase =
-  "w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-foreground placeholder:text-muted/70 " +
+  "w-full min-w-0 rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-foreground placeholder:text-muted/70 " +
   "focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand disabled:opacity-60";
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${inputBase} ${props.className ?? ""}`} />;
+  // iOS Safari draws date inputs with a fixed native width; appearance-none lets them fit their column
+  return <input {...props} className={`${inputBase} [&[type=date]]:min-h-[2.75rem] [&[type=date]]:appearance-none ${props.className ?? ""}`} />;
 }
 
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {

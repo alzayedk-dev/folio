@@ -32,6 +32,7 @@ async function TransactionsContent() {
   const ledger = replayLedger(txns, cash, { base: baseCurrency });
   const sells = new Map(ledger.sells.map((s) => [s.txnId, s]));
   // Buys that were paid with new money have a linked deposit
+  const cashSetOn = cash.filter((c) => c.kind === "starting" || c.kind === "balance").map((c) => c.entryDate).sort().at(-1) ?? null;
   const paidWithNewMoney = new Set(cash.filter((c) => c.txnId).map((c) => c.txnId as string));
 
   // newest first (loadLedgerData already orders by trade date, then entry time)
@@ -68,12 +69,12 @@ async function TransactionsContent() {
       <PageHeader
         title="Transactions"
         subtitle="Every buy, sell and dividend you've recorded."
-        action={<AddTransactionButton positions={toPositionSummary(ledger)} cash={ledger.cash} />}
+        action={<AddTransactionButton positions={toPositionSummary(ledger)} cash={ledger.cash} cashSetOn={cashSetOn} />}
       />
       {rows.length === 0 ? (
         <EmptyState title="No trades on the books yet.">Click “Add transaction” to record your first buy.</EmptyState>
       ) : (
-        <TransactionList rows={rows} positions={toPositionSummary(ledger)} cash={ledger.cash} />
+        <TransactionList rows={rows} positions={toPositionSummary(ledger)} cash={ledger.cash} cashSetOn={cashSetOn} />
       )}
     </>
   );
