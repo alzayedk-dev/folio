@@ -87,6 +87,8 @@ The user types a ticker or company name (for example "lly" or "Eli Lilly"). Sugg
 
 **How a buy was paid (added 18 Nov):** every buy asks "How did you pay for this?": **From my cash in Folio** (cash goes down; if it isn't enough, the difference counts as money added) or **With new money I added** (Folio records a matching deposit linked to the trade, so cash isn't reduced; deleting the trade removes it). The pop-up shows the cash available and "Cash After".
 
+**Cash card actions:** **Add Money** (a deposit on top of current cash, not counted as a gain) and **Set Balance** (the total cash in the account now, which replaces the earlier balance).
+
 **Cash safety-net note:** when more than 80% of a portfolio is invested, the Portfolio page shows a gentle note ("You might want to reconsider your cash position…", not advice). It can be dismissed for the day.
 
 ### 3.3 Transactions tab

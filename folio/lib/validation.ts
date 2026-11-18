@@ -94,6 +94,7 @@ export type TransactionInput = z.infer<typeof transactionSchema>;
 // ---------- cash ----------
 export const cashMessages = {
   amount: "Enter your cash balance (0 or more).",
+  added: "Enter the amount you added (more than 0).",
   currency: "Pick a currency from the list.",
   date: "Pick a date that isn't in the future.",
 } as const;
