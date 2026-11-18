@@ -595,3 +595,10 @@ alter table public.transactions
   add column if not exists coin_count numeric(12, 2) check (coin_count is null or coin_count > 0),
   add column if not exists coin_grams numeric(12, 4) check (coin_grams is null or coin_grams > 0),
   add column if not exists purity numeric(6, 5) check (purity is null or (purity > 0 and purity <= 1));
+
+-- ---------------------------------------------------------------
+-- Buys paid with new money (18 Nov): the matching deposit is linked to its trade and deleted with it
+-- ---------------------------------------------------------------
+alter table public.cash_entries
+  add column if not exists txn_id uuid references public.transactions (id) on delete cascade;
+create index if not exists cash_entries_txn_idx on public.cash_entries (txn_id) where txn_id is not null;

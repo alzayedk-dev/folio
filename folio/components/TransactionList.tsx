@@ -9,7 +9,7 @@ import { TransactionModal, type EditableTxn, type PositionSummary } from "./Tran
 import { Alert, Select } from "./ui";
 import { customCoinLabel, findCoin, isMetal } from "@/lib/metals";
 
-export type TxnRow = EditableTxn & { proceeds: number | null; realizedPL: number | null; total: number };
+export type TxnRow = EditableTxn & { proceeds: number | null; realizedPL: number | null; total: number; funding?: "cash" | "new" | null };
 
 const TYPE_STYLE: Record<TxnRow["type"], string> = {
   buy: "bg-brand-soft text-brand-strong",
@@ -40,7 +40,7 @@ function RowActions({ row, onEdit, onDelete, busy }: { row: TxnRow; onEdit: () =
   );
 }
 
-export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions: PositionSummary }) {
+export function TransactionList({ rows, positions, cash }: { rows: TxnRow[]; positions: PositionSummary; cash?: Record<string, number> }) {
   const router = useRouter();
   const [ticker, setTicker] = useState("all");
   const [type, setType] = useState<"all" | TxnRow["type"]>("all");
@@ -157,7 +157,7 @@ export function TransactionList({ rows, positions }: { rows: TxnRow[]; positions
         )}
       </div>
 
-      <TransactionModal open={!!editing} onClose={() => setEditing(null)} positions={positions} editing={editing} />
+      <TransactionModal open={!!editing} onClose={() => setEditing(null)} positions={positions} editing={editing} cash={cash} />
     </section>
   );
 }

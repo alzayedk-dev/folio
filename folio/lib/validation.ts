@@ -50,6 +50,8 @@ export const transactionSchema = z
     tradeDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, txnMessages.date)]).optional().default(""),
     notes: z.string().trim().max(500, txnMessages.notes).optional().default(""),
     // Gold/silver only: how the metal was entered
+    // Buys only: paid from existing cash, or with new money (Folio then records a matching deposit)
+    funding: z.union([z.literal(""), z.enum(["cash", "new"])]).optional().default(""),
     metalForm: z.union([z.literal(""), z.enum(["bar", "coin", "custom"])]).optional().default(""),
     coinCode: z.union([z.literal(""), z.string().regex(/^[a-z_]{2,30}$/)]).optional().default(""),
     coinCount: z.union([z.literal(""), z.null(), num(txnMessages.coins)]).optional(),
@@ -58,6 +60,7 @@ export const transactionSchema = z
   })
   .transform((v) => ({
     ...v,
+    funding: v.funding === "" ? null : v.funding,
     metalForm: v.metalForm === "" ? null : v.metalForm,
     coinCode: v.coinCode === "" ? null : v.coinCode,
     coinCount: v.coinCount === "" || v.coinCount == null ? null : Number(v.coinCount),

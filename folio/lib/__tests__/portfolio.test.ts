@@ -212,6 +212,14 @@ describe("valuePortfolio", () => {
     expect(e.totalValue).toBeCloseTo(1800);
   });
 
+  it("a buy paid with new money (linked deposit) leaves cash untouched; from cash reduces it", () => {
+    const start = cash("starting", 1000, "USD", "2026-01-01");
+    const t1 = buy("AAPL", 5, 100, "2026-02-01");
+    const linked = { ...cash("deposit", 500, "USD", "2026-02-01"), txnId: t1.id };
+    expect(replayLedger([t1], [start, linked]).cash.USD).toBeCloseTo(1000);
+    expect(replayLedger([t1], [start]).cash.USD).toBeCloseTo(500);
+  });
+
   it("converts Kuwaiti dinar stocks (500 × 0.765 KWD = 382.50 KWD = 1,275 USD at 0.3)", () => {
     const l = replayLedger([buy("KFH.KW", 500, 0.765, "2026-11-18", { currency: "KWD" })], []);
     const v = valuePortfolio(l, { "KFH.KW": q("KFH.KW", 0.765, 0, "KWD") }, symbols, fx, "USD");
@@ -293,5 +301,15 @@ describe("maxSellable", () => {
     expect(maxSellable(txns, "AAPL", "2026-01-15")).toBe(10);
     expect(maxSellable(txns, "AAPL", "2026-03-01", txns[1].id)).toBe(10);
     expect(maxSellable(txns, "MSFT", "2026-03-01")).toBe(0);
+  });
+});
+
+describe("same-day cash entries", () => {
+  it("apply in the order they were recorded (starting cash, then a deposit for a buy)", () => {
+    const start = { id: "zzz", kind: "starting" as const, amount: 1000, currency: "USD", entryDate: "2026-11-18", createdAt: "2026-11-18T07:59:07Z" };
+    const t = buy("GLD", 1, 1211.7, "2026-11-18");
+    const dep = { id: "aaa", kind: "deposit" as const, amount: 1211.7, currency: "USD", entryDate: "2026-11-18", createdAt: "2026-11-18T07:59:33Z", txnId: t.id };
+    // "aaa" would sort before "zzz" by id alone; recorded time puts the deposit after the starting cash
+    expect(replayLedger([t], [dep, start]).cash.USD).toBeCloseTo(1000);
   });
 });

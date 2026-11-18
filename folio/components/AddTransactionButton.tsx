@@ -8,10 +8,12 @@ export function AddTransactionButton({
   positions,
   label = "Add Transaction",
   presetTicker,
+  cash,
 }: {
   positions: PositionSummary;
   label?: string;
   presetTicker?: string;
+  cash?: Record<string, number>;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -22,7 +24,7 @@ export function AddTransactionButton({
         </svg>
         {label}
       </Button>
-      <TransactionModal open={open} onClose={() => setOpen(false)} positions={positions} presetTicker={presetTicker} />
+      <TransactionModal open={open} onClose={() => setOpen(false)} positions={positions} presetTicker={presetTicker} cash={cash} />
     </>
   );
 }

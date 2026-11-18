@@ -66,6 +66,24 @@ function metalDetails(v: TransactionInput): { error?: ActionResult; shares?: num
   return { shares: v.shares, price: v.price, cols: { metal_form: "bar", coin_code: null, coin_count: null, coin_grams: null, purity: v.purity } };
 }
 
+/**
+ * A buy paid with new money gets a matching deposit (same date, currency and total cost), linked to the trade,
+ * so the cash balance isn't reduced. Replaces any earlier linked deposit (when editing).
+ */
+async function syncFundingDeposit(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  txnId: string,
+  portfolioId: string,
+  v: { type: string; funding: "cash" | "new" | null; shares: number | null; price: number | null; fees: number; tradeDate: string },
+  currency: string,
+) {
+  await supabase.from("cash_entries").delete().eq("txn_id", txnId);
+  if (v.type !== "buy" || v.funding !== "new") return;
+  const amount = (v.shares ?? 0) * (v.price ?? 0) + (v.fees ?? 0);
+  if (!(amount > 0)) return;
+  await supabase.from("cash_entries").insert({ portfolio_id: portfolioId, txn_id: txnId, kind: "deposit", amount, currency, entry_date: v.tradeDate, note: "Money added for this buy" });
+}
+
 function parse(formData: FormData) {
   const parsed = transactionSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -112,8 +130,9 @@ export async function createTransaction(formData: FormData): Promise<ActionResul
     if (problem) return { ok: false, error: problem, field: "shares" };
   }
 
-  const { error } = await supabase.from("transactions").insert(row);
-  if (error) return { ok: false, error: messages.generic };
+  const { data: inserted, error } = await supabase.from("transactions").insert(row).select("id").single();
+  if (error || !inserted) return { ok: false, error: messages.generic };
+  await syncFundingDeposit(supabase, inserted.id, portfolio.id, v, sym.currency);
   refresh(supabase, portfolio.id);
   return { ok: true };
 }
@@ -142,6 +161,9 @@ export async function updateTransaction(id: string, formData: FormData): Promise
     .update({ type: updated.type, shares: updated.shares, price: updated.price, amount: updated.amount, fees: updated.fees, trade_date: updated.tradeDate, notes: v.notes || null, ...md.cols })
     .eq("id", id);
   if (error) return { ok: false, error: messages.generic };
+  // Only touch the linked deposit when the user answered the funding question, or the trade is no longer a buy
+  if (v.funding !== null || updated.type !== "buy")
+    await syncFundingDeposit(supabase, id, existing.portfolio_id, { ...v, type: updated.type, shares: updated.shares, price: updated.price, fees: updated.fees, tradeDate: updated.tradeDate }, existing.currency);
   refresh(supabase, existing.portfolio_id);
   return { ok: true };
 }

@@ -16,6 +16,7 @@ import { CashCard } from "@/components/CashCard";
 import { MetalsTable } from "@/components/MetalsTable";
 import { AssetMix } from "@/components/AssetMix";
 import { PortfolioTotal } from "@/components/PortfolioTotal";
+import { CashSafetyNote } from "@/components/CashSafetyNote";
 import { METALS_SECTOR, coinHoldings } from "@/lib/metals";
 import { Alert } from "@/components/ui";
 
@@ -44,7 +45,7 @@ async function PortfolioContent() {
       <PageHeader
         title="Portfolio"
         subtitle="Your holdings, cash and sector mix at a glance."
-        action={<AddTransactionButton positions={positions} />}
+        action={<AddTransactionButton positions={positions} cash={ledger.cash} />}
       />
 
       {!hasAnything ? (
@@ -66,7 +67,7 @@ async function PortfolioContent() {
               <div className="rounded-2xl border border-line bg-white p-5 shadow-sm">
                 <p className="text-sm text-muted">Add a buy for any stock, ETF, gold or silver you own. Folio fills in the live price and keeps the math.</p>
                 <div className="mt-4">
-                  <AddTransactionButton positions={positions} />
+                  <AddTransactionButton positions={positions} cash={ledger.cash} />
                 </div>
               </div>
             </li>
@@ -80,6 +81,7 @@ async function PortfolioContent() {
             <Alert tone="info">Exchange rates for {v.fxMissing.join(", ")} are unavailable right now, so those holdings are shown in their own currency and left out of your {v.base} totals until the rate is back.</Alert>
           )}
           <SummaryCards v={v} />
+          <CashSafetyNote invested={v.investedValue} total={v.totalValue} />
           <div className="flex justify-end">
             <RefreshPrices asOf={asOf} />
           </div>

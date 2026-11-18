@@ -73,14 +73,17 @@ export function TransactionModal({
   editing,
   initialType = "buy",
   presetTicker,
+  cash = {},
 }: {
   open: boolean;
   onClose: () => void;
   positions: PositionSummary;
-  editing?: EditableTxn | null;
+  editing?: (EditableTxn & { funding?: "cash" | "new" | null }) | null;
   initialType?: "buy" | "sell" | "dividend";
   /** Open straight on this stock/metal (e.g. from its stock page) instead of the search step. */
   presetTicker?: string;
+  /** Cash in this portfolio by currency, to show what a buy "from cash" would use. */
+  cash?: Record<string, number>;
 }) {
   const router = useRouter();
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -89,6 +92,8 @@ export function TransactionModal({
   const [form, setForm] = useState({ shares: "", price: "", amount: "", fees: "", tradeDate: "", notes: "" });
   const [error, setError] = useState<{ message: string; field?: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  // Buys: paid from cash already in Folio, or with new money (then a matching deposit is recorded)
+  const [funding, setFunding] = useState<"cash" | "new" | null>(null);
   const [unit, setUnitState] = useState<WeightUnit>("g"); // grams by default; Troy Oz one click away
   const metal = !!picked && isMetal(picked.ticker);
   const metalKey = picked && isMetal(picked.ticker) ? METALS[picked.ticker].key : "gold";
@@ -144,6 +149,7 @@ export function TransactionModal({
     if (editing) {
       setPicked({ ticker: editing.ticker, name: editing.name, exchange: null, currency: editing.currency, sector: "", currentPrice: null });
       setType(editing.type);
+      setFunding(editing.type === "buy" ? editing.funding ?? "cash" : null);
       let shares = editing.shares?.toString() ?? "";
       let price = editing.price?.toString() ?? "";
       const round = (x: number, d = 6) => String(Math.round(x * 10 ** d) / 10 ** d);
@@ -175,6 +181,7 @@ export function TransactionModal({
     } else {
       setPicked(null);
       setType(initialType);
+      setFunding(null);
       setForm({ shares: "", price: "", amount: "", fees: "", tradeDate: "", notes: "" });
       if (presetTicker) {
         if (isMetal(presetTicker)) void pickMetal(METALS[presetTicker].key);
@@ -227,6 +234,17 @@ export function TransactionModal({
   const unitShort = WEIGHT_UNITS.find((u) => u.value === unit)?.short ?? "oz";
   const unitWord = unit === "oz" ? "Ounce" : "Gram";
   const ownedLabel = metal ? `${fmtShares(Math.round(Math.max(fromOunces(owned, isCoinForm ? "g" : unit), 0) * 1e4) / 1e4)} ${isCoinForm ? "g" : unitShort} pure` : `${fmtShares(Math.round(Math.max(owned, 0) * 1e4) / 1e4)} shares`;
+  // Cash this buy would use (when editing a buy paid from cash, its own cost is still in the balance)
+  const editingCost = editing && editing.type === "buy" && editing.funding !== "new" ? (editing.shares ?? 0) * (editing.price ?? 0) + (editing.fees ?? 0) : 0;
+  const cashInCcy = Math.max((cash[ccy] ?? 0) + editingCost, 0);
+  const otherCash = Object.entries(cash).filter(([c, a]) => c !== ccy && a > 0.005);
+  const cashLine =
+    cashInCcy > 0.005
+      ? `Your ${ccy} cash is ${money(cashInCcy, ccy)}. It goes down by the cost.`
+      : otherCash.length
+        ? `You have no ${ccy} cash. Your ${otherCash.map(([c]) => c).join(", ")} cash is converted and used.`
+        : `You have no cash recorded in this portfolio yet.`;
+  const shortfall = valid && otherCash.length === 0 ? qty * px + fee - cashInCcy : 0;
   const spot = picked?.currentPrice ?? null;
   // Current price in the same terms the user types: per share, per unit of bar weight, or melt value per coin
   const currentInUnit =
@@ -239,11 +257,13 @@ export function TransactionModal({
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!picked) return setError({ message: "Pick a stock from the list first.", field: "ticker" });
+    if (type === "buy" && !funding) return setError({ message: "Tell Folio how you paid: from your cash, or with new money you added.", field: "funding" });
     setSaving(true);
     setError(null);
     const fd = new FormData(e.currentTarget);
     fd.set("ticker", picked.ticker);
     fd.set("type", type);
+    if (type === "buy" && funding) fd.set("funding", funding);
     // No date picked: record the trade on today's date (the user's own calendar day)
     if (!String(fd.get("tradeDate") ?? "").trim()) fd.set("tradeDate", todayLocal());
     if (metal && type !== "dividend") {
@@ -465,10 +485,45 @@ export function TransactionModal({
             />
           </Field>
 
+          {type === "buy" && (
+            <fieldset aria-invalid={error?.field === "funding"}>
+              <legend className="text-sm font-medium">How did you pay for this?</legend>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {(
+                  [
+                    { value: "cash", title: "From my cash in Folio", text: cashLine },
+                    { value: "new", title: "With new money I added", text: "Folio records a deposit for the cost, so your cash isn't reduced." },
+                  ] as const
+                ).map((o) => (
+                  <label
+                    key={o.value}
+                    className={`flex cursor-pointer gap-2.5 rounded-xl border p-3 transition-colors ${
+                      funding === o.value ? "border-brand bg-brand-soft/50" : error?.field === "funding" ? "border-loss/50" : "border-line hover:border-brand/40"
+                    }`}
+                  >
+                    <input type="radio" name="fundingChoice" value={o.value} checked={funding === o.value} onChange={() => setFunding(o.value)} className="mt-1 accent-[var(--brand)]" />
+                    <span>
+                      <span className="block text-sm font-semibold">{o.title}</span>
+                      <span className="block text-xs text-muted">{o.text}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {funding === "cash" && shortfall > 0.005 && (
+                <p className="mt-2 text-xs text-warn">
+                  That&apos;s {money(shortfall, ccy)} more than your {ccy} cash. Folio will count the difference as money you added.
+                </p>
+              )}
+            </fieldset>
+          )}
+
           {/* Live preview */}
           <div className="rounded-xl bg-surface px-4 py-3 text-sm">
             {type === "buy" && (
-              <Row label="Total Cost" value={valid ? money(qty * px + fee, ccy) : "—"} />
+              <>
+                <Row label="Total Cost" value={valid ? money(qty * px + fee, ccy) : "—"} />
+                {funding && valid && <Row label="Cash After" value={money(funding === "new" ? cashInCcy : Math.max(cashInCcy - (qty * px + fee), 0), ccy)} />}
+              </>
             )}
             {type === "sell" && (
               <>

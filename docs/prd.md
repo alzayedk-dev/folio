@@ -85,6 +85,10 @@ The user types a ticker or company name (for example "lly" or "Eli Lilly"). Sugg
 - **Sell:** the pop-up shows the **proceeds** (shares × price − fees) and the **realized profit/loss** before saving. You cannot sell more shares than you own.
 - **After saving:** the stock appears in, or updates, the holdings table straight away.
 
+**How a buy was paid (added 18 Nov):** every buy asks "How did you pay for this?": **From my cash in Folio** (cash goes down; if it isn't enough, the difference counts as money added) or **With new money I added** (Folio records a matching deposit linked to the trade, so cash isn't reduced; deleting the trade removes it). The pop-up shows the cash available and "Cash After".
+
+**Cash safety-net note:** when more than 80% of a portfolio is invested, the Portfolio page shows a gentle note ("You might want to reconsider your cash position…", not advice). It can be dismissed for the day.
+
 ### 3.3 Transactions tab
 - A list of every transaction, newest first: date, ticker, type, shares, price, fees, total, proceeds (for sells), realized P/L (for sells) and notes.
 - Filter by ticker and by type.

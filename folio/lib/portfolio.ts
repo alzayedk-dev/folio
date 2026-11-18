@@ -23,6 +23,10 @@ export type CashEntry = {
   amount: number;
   currency: string;
   entryDate: string; // YYYY-MM-DD
+  /** Set when this deposit was added because a buy was paid with new money. */
+  txnId?: string | null;
+  /** When it was recorded: same-day cash entries apply in this order (e.g. starting cash before a later deposit). */
+  createdAt?: string;
 };
 
 export type QuoteLike = { ticker: string; price: number; change: number | null; changePct: number | null; currency: string; stale?: boolean };
@@ -106,7 +110,7 @@ export function replayLedger(txns: Txn[], cashEntries: CashEntry[], opts: Replay
     events.push({
       date: c.entryDate,
       order: 0,
-      tie: c.id,
+      tie: (c.createdAt ?? "") + c.id,
       run: () => {
         if (c.kind === "starting" || c.kind === "balance") {
           // Balance check-point: "this is the cash in my account on this date". It already includes

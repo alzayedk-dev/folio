@@ -21,7 +21,7 @@ export function rowToTxn(r: any): Txn {
 }
 
 export function rowToCash(r: any): CashEntry {
-  return { id: r.id, kind: r.kind, amount: Number(r.amount), currency: r.currency, entryDate: r.entry_date };
+  return { id: r.id, kind: r.kind, amount: Number(r.amount), currency: r.currency, entryDate: r.entry_date, txnId: r.txn_id ?? null, createdAt: r.created_at };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

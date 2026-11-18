@@ -81,12 +81,14 @@ async function StockContent({ ticker }: { ticker: string }) {
   // The user's own position in this stock
   let position: { shares: number; avgCost: number; realized: number } | null = null;
   let positions = {};
+  let cashByCcy: Record<string, number> = {};
   let showShariah = true;
   if (ledgerRes.status === "fulfilled") {
     const { txns, cash, baseCurrency } = ledgerRes.value;
     showShariah = ledgerRes.value.showShariah;
     const ledger = replayLedger(txns, cash, { base: baseCurrency });
     positions = toPositionSummary(ledger);
+    cashByCcy = ledger.cash;
     const pos = ledger.positions[ticker];
     if (pos) position = { shares: pos.shares, avgCost: pos.avgCost, realized: pos.realizedPL };
   }
@@ -115,7 +117,7 @@ async function StockContent({ ticker }: { ticker: string }) {
             )}
           </div>
         </div>
-        <AddTransactionButton positions={positions} presetTicker={ticker} />
+        <AddTransactionButton positions={positions} presetTicker={ticker} cash={cashByCcy} />
       </div>
 
       {/* Price + position */}
