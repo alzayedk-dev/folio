@@ -66,8 +66,11 @@ jobs:
         run: npm ci
       - name: Type check
         run: npx tsc --noEmit
+      # Fails only on critical issues (chosen 18 Nov): the app's high findings are in Expo's build tools, which
+      # never run on the phone, and picomatch (GHSA-fc5q-39xc-vjpf) has no patched release yet. Everything found
+      # is still listed in this step's log; the website's audit stays at high.
       - name: Security audit (libraries the app uses)
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --audit-level=critical
 
   live-site:
     name: Live site is up
