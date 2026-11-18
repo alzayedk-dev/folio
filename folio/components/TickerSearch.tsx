@@ -74,13 +74,14 @@ export function TickerSearch({ onPick, autoFocus }: { onPick: (r: SearchResult) 
         autoComplete="off"
         spellCheck={false}
       />
+      {/* Results sit in the page flow (not floating), so the pop-up grows to show them instead of cutting them off */}
       {open && (
-        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-line bg-white shadow-lg">
+        <div className="mt-2 w-full overflow-hidden rounded-xl border border-line bg-white shadow-sm">
           {status === "loading" && <p className="px-4 py-3 text-sm text-muted">Scanning the exchanges…</p>}
           {status === "error" && <p className="px-4 py-3 text-sm text-loss">{error}</p>}
           {status === "done" && results.length === 0 && <p className="px-4 py-3 text-sm text-muted">{messages.unknownTicker}</p>}
           {status === "done" && results.length > 0 && (
-            <ul id={listId} role="listbox" className="max-h-72 overflow-y-auto py-1">
+            <ul id={listId} role="listbox" className="py-1">
               {results.map((r, i) => (
                 <li
                   key={r.ticker}
