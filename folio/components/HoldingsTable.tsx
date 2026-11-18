@@ -91,7 +91,7 @@ export function HoldingsTable({
     setSort((s) => (s.key === key ? { key, dir: (s.dir * -1) as 1 | -1 } : { key, dir: key === "ticker" || key === "sector" ? 1 : -1 }));
 
   const plCell = (h: HoldingRow) =>
-    mode === "usd" ? money(h.unrealizedPL, base, { sign: true }) : pct(h.unrealizedPLPct, { sign: true });
+    mode === "usd" ? money(h.fxMissing ? h.unrealizedPLLocal : h.unrealizedPL, h.fxMissing ? h.currency : base, { sign: true }) : pct(h.unrealizedPLPct, { sign: true });
 
 
   return (
@@ -144,9 +144,18 @@ export function HoldingsTable({
                   {fmtPrice(h.price, h.currency)}
                   <PriceNote h={h} />
                 </td>
-                <td className="px-3 py-3 text-right font-medium">{money(h.value, base)}</td>
+                <td className="px-3 py-3 text-right font-medium">
+                  {h.fxMissing ? (
+                    <>
+                      <span className="block">{money(h.valueLocal, h.currency)}</span>
+                      <span className="block text-[11px] font-normal text-muted">Rate to {base} unavailable</span>
+                    </>
+                  ) : (
+                    money(h.value, base)
+                  )}
+                </td>
                 <td className="px-3 py-3 text-right">
-                  <span className="block">{pct(h.weight)}</span>
+                  <span className="block">{h.fxMissing ? "—" : pct(h.weight)}</span>
                   <span className="mt-0.5 flex justify-end">
                     <WarningBadge level={h.warning} title={WARNING_TITLE} hideNone />
                   </span>

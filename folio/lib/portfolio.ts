@@ -215,6 +215,9 @@ export type HoldingRow = {
   dayChangePct: number | null;
   unrealizedPL: number; // base currency
   unrealizedPLPct: number | null;
+  unrealizedPLLocal: number; // stock currency
+  /** No exchange rate to the base currency: value is shown in its own currency and left out of totals. */
+  fxMissing: boolean;
   weight: number; // % of total portfolio (cash included)
   warning: Warning;
 };
@@ -248,11 +251,14 @@ export function valuePortfolio(
   base: string,
 ): Valuation {
   const fxMissing = new Set<string>();
+  // Never show an unconverted amount as if it were in the base currency: without a rate it counts as 0 in
+  // base-currency totals, and the row is flagged so it can be shown in its own currency instead.
+  const canConvert = (ccy: string) => convert(1, ccy, base, fx) != null;
   const toBase = (amount: number, ccy: string) => {
     const v = convert(amount, ccy, base, fx);
     if (v == null) {
       fxMissing.add(ccy);
-      return amount;
+      return 0;
     }
     return v;
   };
@@ -292,6 +298,8 @@ export function valuePortfolio(
       dayChangePct: priceMissing ? null : q.changePct,
       unrealizedPL: toBase(plLocal, p.currency),
       unrealizedPLPct: p.costBasis > EPS ? (plLocal / p.costBasis) * 100 : null,
+      unrealizedPLLocal: plLocal,
+      fxMissing: !canConvert(p.currency),
     });
   }
 
@@ -307,9 +315,9 @@ export function valuePortfolio(
   const holdings: HoldingRow[] = rows
     .map((r) => {
       const weight = pct(r.value);
-      return { ...r, weight, warning: r.sector === METALS_SECTOR ? ("none" as Warning) : stockWarning(weight) };
+      return { ...r, weight, warning: r.sector === METALS_SECTOR || r.fxMissing ? ("none" as Warning) : stockWarning(weight) };
     })
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.value - a.value || b.valueLocal - a.valueLocal);
 
   const bySector = new Map<string, { value: number; tickers: string[] }>();
   for (const h of holdings) {

@@ -77,7 +77,7 @@ async function PortfolioContent() {
         <div className="space-y-6">
           {notice && <Alert tone="info">{notice}</Alert>}
           {v.fxMissing.length > 0 && (
-            <Alert tone="info">Exchange rates for {v.fxMissing.join(", ")} are unavailable right now, so those amounts aren&apos;t converted yet.</Alert>
+            <Alert tone="info">Exchange rates for {v.fxMissing.join(", ")} are unavailable right now, so those holdings are shown in their own currency and left out of your {v.base} totals until the rate is back.</Alert>
           )}
           <SummaryCards v={v} />
           <div className="flex justify-end">

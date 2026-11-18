@@ -212,6 +212,26 @@ describe("valuePortfolio", () => {
     expect(e.totalValue).toBeCloseTo(1800);
   });
 
+  it("converts Kuwaiti dinar stocks (500 × 0.765 KWD = 382.50 KWD = 1,275 USD at 0.3)", () => {
+    const l = replayLedger([buy("KFH.KW", 500, 0.765, "2026-11-18", { currency: "KWD" })], []);
+    const v = valuePortfolio(l, { "KFH.KW": q("KFH.KW", 0.765, 0, "KWD") }, symbols, fx, "USD");
+    expect(v.holdings[0].valueLocal).toBeCloseTo(382.5);
+    expect(v.holdings[0].value).toBeCloseTo(1275);
+    expect(v.holdings[0].fxMissing).toBe(false);
+  });
+
+  it("never shows an unconverted amount as dollars when an exchange rate is missing", () => {
+    const l = replayLedger([buy("AAPL", 1, 100, "2026-01-02"), buy("XYZ.QQ", 100, 50, "2026-01-02", { currency: "QQQ" })], []);
+    const v = valuePortfolio(l, { AAPL: q("AAPL", 100), "XYZ.QQ": q("XYZ.QQ", 50, 0, "QQQ") }, symbols, fx, "USD");
+    const odd = v.holdings.find((h) => h.ticker === "XYZ.QQ")!;
+    expect(odd.fxMissing).toBe(true);
+    expect(odd.value).toBe(0); // left out of USD totals
+    expect(odd.valueLocal).toBe(5000); // still shown in its own currency
+    expect(odd.warning).toBe("none");
+    expect(v.totalValue).toBeCloseTo(100);
+    expect(v.fxMissing).toEqual(["QQQ"]);
+  });
+
   it("falls back to average cost when a price is missing, and says so", () => {
     const l = replayLedger([buy("AAPL", 10, 100, "2026-01-02")], []);
     const v = valuePortfolio(l, {}, symbols, fx, "USD");
